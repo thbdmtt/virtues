@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:migrate:prod": "npx drizzle-kit push",
+    "db:seed:prod": "npx tsx src/lib/db/seed.ts",
     "generate:pwa": "tsx src/scripts/generate-icons.ts",
-    "prestart": "npm run build",
-    "start": "next start",
+    "prestart": "node src/scripts/ensure-standalone.cjs",
+    "start": "node .next/standalone/server.js",
     "test": "vitest"
   },
   "dependencies": {
