@@ -43,10 +43,10 @@ function CloseButton({ onClose }: CloseButtonProps) {
         minWidth: "44px",
         minHeight: "44px",
         padding: "8px",
-        color: "var(--cream-mid)",
+        color: "var(--cream-dim)",
         fontFamily: "var(--font-body)",
         fontSize: "18px",
-        opacity: 0.6,
+        opacity: 0.5,
         transition: "opacity var(--transition-base)",
       }}
     >
@@ -136,13 +136,13 @@ export default function MenuPanel({
         }}
       >
         <div
-          className="flex min-h-0 flex-1 flex-col overflow-y-auto px-7"
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto px-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{
-            paddingTop: "calc(max(var(--safe-top), 52px) + 36px)",
+            paddingTop: "8px",
             paddingBottom: "max(var(--safe-bottom), 32px)",
           }}
         >
-          <div className="mt-auto flex flex-col">
+          <div className="flex flex-col">
             {orderedVirtues.map((virtue, index) => {
               const isFocus = virtue.id === focusId;
 
@@ -151,28 +151,28 @@ export default function MenuPanel({
                   key={virtue.id}
                   type="button"
                   onClick={() => handleOpenVirtue(virtue.id)}
-                  className="tracker-focus-ring block w-full border-b py-[14px] text-left"
+                  className="tracker-focus-ring block w-full border-b py-4 text-left"
                   style={{
-                    borderBottomColor: "var(--cream-line-soft)",
+                    borderBottomColor: "var(--cream-line-strong)",
                     borderTopColor:
-                      index === 0 ? "var(--cream-line-soft)" : undefined,
+                      index === 0 ? "var(--cream-line-strong)" : undefined,
                     borderTopWidth: index === 0 ? "1px" : undefined,
                     transition: "opacity var(--transition-base)",
                   }}
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-baseline gap-6">
                     <span
-                      className="inline-block min-w-[24px] text-[9px] font-light uppercase tracking-[0.2em]"
+                      className="inline-block min-w-[20px] text-[10px] font-light uppercase tracking-[0.2em]"
                       style={{
                         color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
                         fontFamily: "var(--font-body)",
-                        opacity: isFocus ? 0.8 : 0.45,
+                        opacity: isFocus ? 1 : 0.4,
                       }}
                     >
                       {formatVirtueNumber(virtue.id)}
                     </span>
                     <span
-                      className="text-[clamp(22px,5.5vw,28px)] font-light leading-none tracking-[-0.01em]"
+                      className="text-[clamp(22px,5.5vw,26px)] font-light leading-none tracking-[-0.01em]"
                       style={{
                         color: isFocus ? "var(--gold)" : "var(--cream)",
                         fontFamily: "var(--font-display)",

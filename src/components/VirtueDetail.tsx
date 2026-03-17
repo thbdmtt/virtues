@@ -17,9 +17,17 @@ function getVirtueNumber(id: number): string {
   return String(id).padStart(2, "0");
 }
 
+function getVirtueNumberLabel(id: number): string {
+  if (id < 10) {
+    return getVirtueNumber(id).split("").join(" ");
+  }
+
+  return String(id);
+}
+
 export default function VirtueDetail({
   virtue,
-  isCurrentFocus,
+  isCurrentFocus: _isCurrentFocus,
 }: VirtueDetailProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion() ?? false;
@@ -44,7 +52,7 @@ export default function VirtueDetail({
       className="min-h-screen"
       style={{
         padding:
-          "calc(var(--safe-top) + 20px) calc(28px + var(--safe-right)) calc(var(--safe-bottom) + 28px) calc(28px + var(--safe-left))",
+          "max(var(--safe-top), 52px) calc(28px + var(--safe-right)) max(var(--safe-bottom), 40px) calc(28px + var(--safe-left))",
       }}
     >
       <div
@@ -57,11 +65,11 @@ export default function VirtueDetail({
         <button
           type="button"
           onClick={() => router.back()}
-          className="tracker-focus-ring mb-6 w-fit text-[11px] font-light hover:opacity-90"
+          className="tracker-focus-ring mb-7 w-fit text-[13px] font-light hover:opacity-90"
           style={{
             color: "var(--cream-dim)",
             fontFamily: "var(--font-body)",
-            opacity: 0.5,
+            opacity: 0.45,
             transition: "opacity var(--transition-base)",
           }}
         >
@@ -72,25 +80,25 @@ export default function VirtueDetail({
           initial={getInitial(8)}
           animate={getAnimate(8)}
           transition={getTransition(0)}
-          className="mb-2 text-[8px] font-light uppercase tracking-[0.4em]"
+          className="mb-2 text-[9px] font-light uppercase tracking-[0.4em]"
           style={{ color: "var(--gold-soft)", fontFamily: "var(--font-body)" }}
         >
-          {getVirtueNumber(virtue.id)}
+          {getVirtueNumberLabel(virtue.id)}
         </motion.p>
 
         <motion.h1
           initial={getInitial(12)}
           animate={getAnimate(12)}
           transition={getTransition(0.08)}
-          className="mb-4 text-[clamp(48px,12vw,64px)] font-light leading-[0.88] tracking-[-0.025em]"
+          className="mb-[14px] text-[clamp(48px,12vw,60px)] font-light leading-[0.9] tracking-[-0.025em]"
           style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
         >
           {virtue.nameFr}
         </motion.h1>
 
         <motion.div
-          initial={shouldReduceMotion ? { width: 32 } : { width: 0 }}
-          animate={{ width: 32 }}
+          initial={shouldReduceMotion ? { width: 40 } : { width: 0 }}
+          animate={{ width: 40 }}
           transition={getTransition(0.16)}
           className="mb-[18px] h-px"
           style={{ background: "var(--gold)", opacity: 0.4 }}
@@ -100,22 +108,21 @@ export default function VirtueDetail({
           initial={getInitial(0)}
           animate={getAnimate(0)}
           transition={getTransition(0.22)}
-          className="mb-7 text-[14px] font-light italic"
+          className="mb-6 text-[13px] font-light italic"
           style={{
             color: "var(--cream-mid)",
             fontFamily: "var(--font-display)",
             lineHeight: 1.75,
-            opacity: 0.8,
+            opacity: 0.75,
           }}
         >
-          « {virtue.maxim} »
+          {`«\u00a0${virtue.maxim}\u00a0»`}
         </motion.p>
 
         <motion.div
           initial={getInitial(0)}
           animate={getAnimate(0)}
           transition={getTransition(0.3)}
-          className="space-y-[14px]"
         >
           {reflectionParagraphs.map((paragraph, index) => (
             <p
@@ -125,26 +132,14 @@ export default function VirtueDetail({
                 color: "var(--cream-mid)",
                 fontFamily: "var(--font-display)",
                 lineHeight: 1.7,
-                opacity: 0.72,
+                marginBottom: "12px",
+                opacity: 0.7,
               }}
             >
               {paragraph}
             </p>
           ))}
         </motion.div>
-
-        {isCurrentFocus ? (
-          <p
-            className="mt-auto pt-10 text-center text-[8px] font-light uppercase tracking-[0.25em]"
-            style={{
-              color: "var(--gold-soft)",
-              fontFamily: "var(--font-body)",
-              opacity: 0.6,
-            }}
-          >
-            · Vertu de la semaine ·
-          </p>
-        ) : null}
       </div>
     </main>
   );
