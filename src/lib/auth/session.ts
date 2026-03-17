@@ -7,6 +7,7 @@ export type AuthSessionData = {
 
 const AUTH_COOKIE_NAME = "franklin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 function getEnvValue(key: "APP_PASSWORD" | "SESSION_SECRET"): string | null {
   const value = process.env[key]?.trim();
@@ -18,7 +19,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function getAppPasswordHash(): string | null {
+export function getAppPassword(): string | null {
   return getEnvValue("APP_PASSWORD");
 }
 
@@ -35,7 +36,7 @@ export function getSessionOptions(): SessionOptions | null {
     ttl: SESSION_TTL_SECONDS,
     cookieOptions: {
       httpOnly: true,
-      secure: true,
+      secure: IS_PRODUCTION,
       sameSite: "strict",
       path: "/",
     },

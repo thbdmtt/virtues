@@ -1,10 +1,9 @@
-import bcrypt from "bcryptjs";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  getAppPasswordHash,
+  getAppPassword,
   getSessionOptions,
   type AuthSessionData,
 } from "@/lib/auth/session";
@@ -26,9 +25,9 @@ function getSubmittedPassword(value: unknown): string | null {
 export async function POST(request: NextRequest) {
   try {
     const sessionOptions = getSessionOptions();
-    const appPasswordHash = getAppPasswordHash();
+    const appPassword = getAppPassword();
 
-    if (!sessionOptions || !appPasswordHash) {
+    if (!sessionOptions || !appPassword) {
       return NextResponse.json(
         { error: "configuration_missing" },
         { status: 500 },
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValidPassword = await bcrypt.compare(password, appPasswordHash);
+    const isValidPassword = password === appPassword;
 
     if (!isValidPassword) {
       return NextResponse.json({ error: "incorrect" }, { status: 400 });
