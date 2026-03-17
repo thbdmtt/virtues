@@ -37,3 +37,21 @@ export type WeekScore = {
 };
 
 export type HistoryItem = WeekScore;
+
+export type PushSubscriptionKeys = {
+  p256dh: string;
+  auth: string;
+};
+
+export type PushSubscriptionInput = {
+  endpoint: string;
+  keys: PushSubscriptionKeys;
+};
+
+export type PushSubscriptionRecord = {
+  id: number;
+  endpoint: string;
+  keysP256dh: string;
+  keysAuth: string;
+  createdAt: string;
+};

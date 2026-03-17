@@ -14,7 +14,12 @@ type ScreenWeekProps = {
   marks: Record<string, boolean>;
   weekScore: number;
   weekRange: string;
+  canGoPrevious: boolean;
+  isCurrentWeek: boolean;
+  isLoading: boolean;
   isOpen: boolean;
+  onNextWeek: () => void;
+  onPreviousWeek: () => void;
   onToggle: (virtueId: number, dayIdx: number) => void;
   onClose: () => void;
 };
@@ -45,13 +50,20 @@ export default function ScreenWeek({
   marks,
   weekScore,
   weekRange,
+  canGoPrevious,
+  isCurrentWeek,
+  isLoading,
   isOpen,
+  onNextWeek,
+  onPreviousWeek,
   onToggle,
   onClose,
 }: ScreenWeekProps) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const orderedVirtues = getOrderedVirtues(virtues, focusId);
   const today = startOfDay(new Date());
+  const isPreviousDisabled = !canGoPrevious || isLoading;
+  const isNextDisabled = isCurrentWeek || isLoading;
 
   return (
     <motion.section
@@ -77,16 +89,48 @@ export default function ScreenWeek({
         backdropFilter: "blur(18px)",
       }}
     >
-      <header className="flex items-end justify-between px-[10px] pb-4 pt-5">
-        <p
-          className="text-[13px] font-light italic"
-          style={{
-            color: "var(--cream-mid)",
-            fontFamily: "var(--font-display)",
-          }}
-        >
-          {weekRange}
-        </p>
+      <header className="flex items-end justify-between gap-4 px-[10px] pb-4 pt-5">
+        <div className="flex min-w-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label="Afficher la semaine précédente"
+            onClick={onPreviousWeek}
+            disabled={isPreviousDisabled}
+            className="tracker-focus-ring h-11 min-w-11 px-2 text-[14px] font-light hover:opacity-50 disabled:hover:opacity-20"
+            style={{
+              color: "var(--cream-dim)",
+              fontFamily: "var(--font-body)",
+              opacity: isPreviousDisabled ? 0.2 : 0.34,
+              transition: "opacity var(--transition-base)",
+            }}
+          >
+            ←
+          </button>
+          <p
+            className="truncate text-[13px] font-light italic"
+            style={{
+              color: "var(--cream-mid)",
+              fontFamily: "var(--font-display)",
+            }}
+          >
+            {weekRange}
+          </p>
+          <button
+            type="button"
+            aria-label="Afficher la semaine suivante"
+            onClick={onNextWeek}
+            disabled={isNextDisabled}
+            className="tracker-focus-ring h-11 min-w-11 px-2 text-[14px] font-light hover:opacity-50 disabled:hover:opacity-20"
+            style={{
+              color: "var(--cream-dim)",
+              fontFamily: "var(--font-body)",
+              opacity: isNextDisabled ? 0.2 : 0.34,
+              transition: "opacity var(--transition-base)",
+            }}
+          >
+            →
+          </button>
+        </div>
         <div className="text-right">
           <p
             className="text-[28px] font-light leading-none"

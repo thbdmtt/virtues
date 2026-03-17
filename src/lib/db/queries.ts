@@ -5,12 +5,18 @@ import {
   startOfISOWeek,
   subWeeks,
 } from "date-fns";
-import { and, asc, count, eq, gte, lte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
 
-import type { Entry, HistoryItem, Virtue } from "@/types";
+import type {
+  Entry,
+  HistoryItem,
+  PushSubscriptionInput,
+  PushSubscriptionRecord,
+  Virtue,
+} from "@/types";
 
 import { db } from "./client";
-import { entries, virtues } from "./schema";
+import { entries, pushSubscriptions, virtues } from "./schema";
 
 const CYCLE_LENGTH = 13;
 const HISTORY_LENGTH = 13;
@@ -129,4 +135,46 @@ export async function getLast13WeeksScores(): Promise<HistoryItem[]> {
       score: await getWeekScore(weekStart),
     })),
   );
+}
+
+export async function savePushSubscription(
+  subscription: PushSubscriptionInput,
+): Promise<void> {
+  const createdAt = new Date().toISOString();
+
+  await db
+    .insert(pushSubscriptions)
+    .values({
+      endpoint: subscription.endpoint,
+      keysP256dh: subscription.keys.p256dh,
+      keysAuth: subscription.keys.auth,
+      createdAt,
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        keysP256dh: subscription.keys.p256dh,
+        keysAuth: subscription.keys.auth,
+        createdAt,
+      },
+    });
+}
+
+export async function getPushSubscriptions(): Promise<PushSubscriptionRecord[]> {
+  return await db
+    .select()
+    .from(pushSubscriptions)
+    .orderBy(desc(pushSubscriptions.createdAt));
+}
+
+export async function deletePushSubscriptionsByEndpoints(
+  endpoints: string[],
+): Promise<void> {
+  if (endpoints.length === 0) {
+    return;
+  }
+
+  await db
+    .delete(pushSubscriptions)
+    .where(inArray(pushSubscriptions.endpoint, endpoints));
 }

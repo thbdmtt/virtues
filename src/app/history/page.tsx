@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { parseISO } from "date-fns";
 
+import { PWA_APP_NAME } from "@/lib/theme/pwa";
 import {
   getBaseUrl,
   getRequestCookieHeader,
@@ -87,7 +88,7 @@ export default async function HistoryPage() {
         <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-6 pt-[calc(2rem+var(--safe-top))] lg:pt-[calc(2.5rem+var(--safe-top))] md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <p className="text-sm uppercase tracking-[0.24em] text-[var(--text-secondary)]">
-              Franklin Virtues Tracker
+              {PWA_APP_NAME}
             </p>
             <div className="space-y-1">
               <h1 className="text-4xl text-[var(--text-primary)]">

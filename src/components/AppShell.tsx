@@ -1,31 +1,28 @@
 "use client";
 
 import { parseISO } from "date-fns";
-import { useEffect, useRef, useState, type TouchEvent, type WheelEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type TouchEvent,
+  type WheelEvent,
+} from "react";
 
 import MenuPanel from "@/components/MenuPanel";
 import ScreenToday from "@/components/ScreenToday";
 import ScreenWeek from "@/components/ScreenWeek";
+import useMarkMutation from "@/components/useMarkMutation";
+import useWeekScreenData from "@/components/useWeekScreenData";
 import MenuButton from "@/components/ui/MenuButton";
+import { PWA_APP_NAME } from "@/lib/theme/pwa";
 import { countMarkedEntries, getWeekMarkKey } from "@/lib/utils/marks";
-import type { Virtue } from "@/types";
+import { buildWeekMarks } from "@/lib/utils/weekMarks";
+import type { WeekData } from "@/types";
 
 type AppShellProps = {
-  virtues: Virtue[];
-  focusVirtue: Virtue;
-  focusWeekNum: number;
-  initialMarks: Record<string, boolean>;
-  isTodayComplete: boolean;
-  weekDates: string[];
-  weekLabel: string;
-};
-
-type MarkApiSuccess = {
-  data: {
-    date: string;
-    virtueId: number;
-    newState: "empty" | "clean" | "marked";
-  };
+  initialWeekData: WeekData;
+  vapidPublicKey: string | null;
 };
 
 type TouchStartPoint = {
@@ -40,27 +37,6 @@ function isElement(value: EventTarget | null): value is Element {
   return value instanceof Element;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isMarkApiSuccess(value: unknown): value is MarkApiSuccess {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  const data = value.data;
-
-  return (
-    isRecord(data) &&
-    typeof data.date === "string" &&
-    typeof data.virtueId === "number" &&
-    (data.newState === "empty" ||
-      data.newState === "clean" ||
-      data.newState === "marked")
-  );
-}
-
 function getWeekScrollContainer(target: EventTarget | null): HTMLElement | null {
   if (!isElement(target)) {
     return null;
@@ -72,27 +48,50 @@ function getWeekScrollContainer(target: EventTarget | null): HTMLElement | null 
 }
 
 export default function AppShell({
-  virtues,
-  focusVirtue,
-  focusWeekNum,
-  initialMarks,
-  isTodayComplete,
-  weekDates,
-  weekLabel,
+  initialWeekData,
+  vapidPublicKey,
 }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [weekOpen, setWeekOpen] = useState(false);
-  const [marks, setMarks] = useState(initialMarks);
+  const [currentMarks, setCurrentMarks] = useState(
+    buildWeekMarks(initialWeekData),
+  );
   const [swipeCount, setSwipeCount] = useState(0);
   const touchStartRef = useRef<TouchStartPoint | null>(null);
-  const weekDays = weekDates.map((date) => parseISO(date));
-  const currentWeekScore = countMarkedEntries(marks);
+  const toggleMark = useMarkMutation();
+  const currentWeekDates = initialWeekData.weekDays.map((day) => day.date);
+  const {
+    canGoPrevious,
+    displayedMarks,
+    displayedWeekData,
+    goToNextWeek,
+    goToPreviousWeek,
+    isCurrentWeek,
+    isLoading,
+    setDisplayedMark,
+  } = useWeekScreenData({
+    currentMarks,
+    initialWeekData,
+  });
+  const displayedWeekDays = displayedWeekData.weekDays.map((day) =>
+    parseISO(day.date),
+  );
+  const displayedWeekScore = countMarkedEntries(displayedMarks);
 
   useEffect(() => {
-    setMarks(initialMarks);
+    setCurrentMarks(buildWeekMarks(initialWeekData));
     setWeekOpen(false);
     setMenuOpen(false);
-  }, [initialMarks, weekDates]);
+  }, [initialWeekData.weekStart]);
+
+  function setCurrentMark(virtueId: number, dayIdx: number, isMarked: boolean) {
+    const markKey = getWeekMarkKey(virtueId, dayIdx);
+
+    setCurrentMarks((previousMarks) => ({
+      ...previousMarks,
+      [markKey]: isMarked,
+    }));
+  }
 
   function openWeek() {
     setWeekOpen(true);
@@ -169,50 +168,37 @@ export default function AppShell({
     }
   }
 
-  async function handleToggleMark(virtueId: number, dayIdx: number) {
-    const date = weekDates[dayIdx];
+  async function handleTodayToggleMark(virtueId: number, dayIdx: number) {
+    const previousMarked = Boolean(
+      currentMarks[getWeekMarkKey(virtueId, dayIdx)],
+    );
 
-    if (!date) {
-      return;
-    }
+    await toggleMark({
+      date: currentWeekDates[dayIdx],
+      dayIdx,
+      previousMarked,
+      setCurrentMark,
+      setDisplayedMark,
+      syncCurrentWeek: true,
+      virtueId,
+    });
+  }
 
-    const markKey = getWeekMarkKey(virtueId, dayIdx);
-    const previousMarked = Boolean(marks[markKey]);
-    const optimisticMarked = !previousMarked;
+  async function handleWeekToggleMark(virtueId: number, dayIdx: number) {
+    const previousMarked = Boolean(
+      displayedMarks[getWeekMarkKey(virtueId, dayIdx)],
+    );
+    const displayedWeekDates = displayedWeekData.weekDays.map((day) => day.date);
 
-    setMarks((previousState) => ({
-      ...previousState,
-      [markKey]: optimisticMarked,
-    }));
-
-    try {
-      const response = await fetch("/api/mark", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ date, virtueId }),
-      });
-      const payload: unknown = await response.json();
-
-      if (!response.ok || !isMarkApiSuccess(payload)) {
-        throw new Error("Mark API returned an invalid response.");
-      }
-
-      const resolvedMarked = payload.data.newState === "marked";
-
-      setMarks((previousState) => ({
-        ...previousState,
-        [markKey]: resolvedMarked,
-      }));
-    } catch (error: unknown) {
-      console.error("Screen state mark update failed", error);
-
-      setMarks((previousState) => ({
-        ...previousState,
-        [markKey]: previousMarked,
-      }));
-    }
+    await toggleMark({
+      date: displayedWeekDates[dayIdx],
+      dayIdx,
+      previousMarked,
+      setCurrentMark,
+      setDisplayedMark,
+      syncCurrentWeek: isCurrentWeek,
+      virtueId,
+    });
   }
 
   return (
@@ -229,7 +215,7 @@ export default function AppShell({
             className="text-[10px] font-light uppercase tracking-[0.35em]"
             style={{ color: "var(--cream-dim)" }}
           >
-            Franklin
+            {PWA_APP_NAME.toUpperCase()}
           </p>
           <MenuButton isOpen={menuOpen} onToggle={() => setMenuOpen((open) => !open)} />
         </header>
@@ -241,31 +227,36 @@ export default function AppShell({
           onWheel={handleScreensWheel}
         >
           <ScreenToday
-            virtue={focusVirtue}
-            focusWeekNum={focusWeekNum}
-            weekMarks={marks}
-            onToggleMark={handleToggleMark}
-            isTodayComplete={isTodayComplete}
+            virtue={initialWeekData.virtueFocus}
+            focusWeekNum={initialWeekData.virtueFocus.weekNumber}
+            vapidPublicKey={vapidPublicKey}
+            weekMarks={currentMarks}
+            onToggleMark={handleTodayToggleMark}
             isWeekOpen={weekOpen}
             isSwipeHintHidden={swipeCount > 0}
           />
           <ScreenWeek
-            virtues={virtues}
-            focusId={focusVirtue.id}
-            weekDays={weekDays}
-            marks={marks}
-            weekScore={currentWeekScore}
-            weekRange={weekLabel}
+            virtues={displayedWeekData.virtues}
+            focusId={displayedWeekData.virtueFocus.id}
+            weekDays={displayedWeekDays}
+            marks={displayedMarks}
+            weekScore={displayedWeekScore}
+            weekRange={displayedWeekData.weekLabel}
+            canGoPrevious={canGoPrevious}
+            isCurrentWeek={isCurrentWeek}
+            isLoading={isLoading}
             isOpen={weekOpen}
-            onToggle={handleToggleMark}
+            onNextWeek={goToNextWeek}
+            onPreviousWeek={goToPreviousWeek}
+            onToggle={handleWeekToggleMark}
             onClose={closeWeek}
           />
         </div>
       </main>
 
       <MenuPanel
-        virtues={virtues}
-        focusId={focusVirtue.id}
+        virtues={initialWeekData.virtues}
+        focusId={initialWeekData.virtueFocus.id}
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
       />

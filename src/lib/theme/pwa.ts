@@ -17,7 +17,7 @@ export type PwaManifest = {
   icons: readonly PwaIcon[];
 };
 
-export const PWA_APP_NAME = "Franklin";
+export const PWA_APP_NAME = "Virtues";
 export const PWA_APP_DESCRIPTION = "Treize vertus pour une vie meilleure.";
 
 export const PWA_THEME = {

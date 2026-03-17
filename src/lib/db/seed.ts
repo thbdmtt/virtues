@@ -104,8 +104,8 @@ const VIRTUES = [
   {
     id: 12,
     weekNumber: 12,
-    nameFr: "Relations saines",
-    nameEn: "Chastity",
+    nameFr: "Liens",
+    nameEn: "Bonds",
     description: "Cultive les liens qui t'élèvent ; protège-toi de ceux qui t'épuisent.",
     maxim: "L'affection véritable nourrit — elle n'exige pas que tu te perdes.",
   },

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "franklin-v1";
+const CACHE_VERSION = "virtues-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -154,7 +154,12 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) =>
       Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName.startsWith("franklin-") && !cacheName.startsWith(CACHE_VERSION))
+          .filter(
+            (cacheName) =>
+              (cacheName.startsWith("franklin-") ||
+                cacheName.startsWith("virtues-")) &&
+              !cacheName.startsWith(CACHE_VERSION),
+          )
           .map((cacheName) => caches.delete(cacheName)),
       ),
     ).then(() => self.clients.claim()),
@@ -182,4 +187,23 @@ self.addEventListener("fetch", (event) => {
   if (isStaticAsset(url, request)) {
     event.respondWith(cacheFirst(request));
   }
+});
+
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = typeof data.title === "string" ? data.title : "Virtues";
+  const body =
+    typeof data.body === "string"
+      ? data.body
+      : "Ta journée t'attend. Prends un moment.";
+  const tag = typeof data.tag === "string" ? data.tag : "virtues-daily";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag,
+    }),
+  );
 });

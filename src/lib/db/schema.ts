@@ -31,3 +31,11 @@ export const weekCycles = sqliteTable("week_cycles", {
     .notNull()
     .references(() => virtues.id, { onDelete: "restrict" }),
 });
+
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  endpoint: text("endpoint").notNull().unique(),
+  keysP256dh: text("keys_p256dh").notNull(),
+  keysAuth: text("keys_auth").notNull(),
+  createdAt: text("created_at").notNull(),
+});

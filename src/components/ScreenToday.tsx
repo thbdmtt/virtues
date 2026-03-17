@@ -4,6 +4,7 @@ import { format, getISODay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
 
+import NotificationSetup from "@/components/NotificationSetup";
 import TodayMarkControls from "@/components/ui/TodayMarkControls";
 import { getWeekMarkKey } from "@/lib/utils/marks";
 import type { Virtue } from "@/types";
@@ -11,9 +12,9 @@ import type { Virtue } from "@/types";
 type ScreenTodayProps = {
   virtue: Virtue;
   focusWeekNum: number;
+  vapidPublicKey: string | null;
   weekMarks: Record<string, boolean>;
   onToggleMark: (virtueId: number, dayIdx: number) => void;
-  isTodayComplete: boolean;
   isWeekOpen: boolean;
   isSwipeHintHidden: boolean;
 };
@@ -24,20 +25,18 @@ function getTodayIndex(): number {
   return getISODay(new Date()) - 1;
 }
 
-function getDayLabel(): string {
-  return format(new Date(), "EEEE", { locale: fr }).toUpperCase();
-}
-
-function getDayNumber(): string {
-  return format(new Date(), "d");
+function getFocusDateLabel(): string {
+  return format(new Date(), "EEE d", { locale: fr })
+    .replace(".", "")
+    .toUpperCase();
 }
 
 export default function ScreenToday({
   virtue,
   focusWeekNum,
+  vapidPublicKey,
   weekMarks,
   onToggleMark,
-  isTodayComplete,
   isWeekOpen,
   isSwipeHintHidden,
 }: ScreenTodayProps) {
@@ -66,45 +65,6 @@ export default function ScreenToday({
           "max(var(--safe-top), 132px) calc(28px + var(--safe-right)) max(var(--safe-bottom), 48px) calc(28px + var(--safe-left))",
       }}
     >
-      <div
-        className="pointer-events-none absolute"
-        style={{
-          top: "max(var(--safe-top), 52px)",
-          right: "calc(28px + var(--safe-right))",
-        }}
-      >
-        <p
-          className="text-right text-[9px] font-light uppercase tracking-[0.3em]"
-          style={{ color: "var(--cream-dim)" }}
-        >
-          {getDayLabel()}
-        </p>
-        <div className="mt-2 flex items-center justify-end gap-2">
-          <p
-            className="text-right text-[22px] leading-none"
-            style={{
-              color: isTodayComplete ? "var(--gold)" : "var(--cream-mid)",
-              fontFamily: "var(--font-display)",
-              transition: "color 400ms var(--ease)",
-            }}
-          >
-            {getDayNumber()}
-          </p>
-          <span
-            aria-hidden={!isTodayComplete}
-            className="text-[10px] font-light"
-            style={{
-              color: "var(--gold)",
-              fontFamily: "var(--font-body)",
-              opacity: isTodayComplete ? 0.7 : 0,
-              transition: "opacity 400ms var(--ease)",
-            }}
-          >
-            ✓
-          </span>
-        </div>
-      </div>
-
       <div className="relative flex flex-col justify-end">
         <div>
           <div className="flex items-center gap-2">
@@ -123,9 +83,12 @@ export default function ScreenToday({
             />
             <p
               className="text-[9px] font-light uppercase tracking-[0.35em]"
-              style={{ color: "var(--gold-soft)" }}
+              style={{
+                color: "var(--gold-soft)",
+                fontFamily: "var(--font-body)",
+              }}
             >
-              Focus · semaine {focusWeekNum}
+              {`Focus · semaine ${focusWeekNum} · ${getFocusDateLabel()}`}
             </p>
           </div>
 
@@ -155,6 +118,8 @@ export default function ScreenToday({
           todayIndex={todayIndex}
           onToggleMark={onToggleMark}
         />
+
+        <NotificationSetup vapidPublicKey={vapidPublicKey} />
       </div>
 
       <motion.div

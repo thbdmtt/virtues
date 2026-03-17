@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { PWA_APP_NAME } from "@/lib/theme/pwa";
+
 type AuthSuccess = {
   data: {
     success: boolean;
@@ -82,7 +84,7 @@ export default function LoginPage() {
               fontFamily: "var(--font-display)",
             }}
           >
-            Franklin
+            {PWA_APP_NAME}
           </h1>
 
           <span
