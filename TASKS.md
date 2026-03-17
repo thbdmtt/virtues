@@ -1198,3 +1198,257 @@ Zéro App Store. Zéro Xcode. Zéro coût.
 ```
 
 ---
+Phase M0
+
+Lis SPEC.md et AGENTS.md intégralement avant de commencer.
+
+---
+
+CONTEXTE
+─────────
+L'app tourne actuellement avec better-sqlite3 (fichier local).
+On migre vers Turso (@libsql/client) pour permettre le déploiement
+sur Vercel. Le schéma, les queries et toute la logique métier
+restent identiques — seul le client de base de données change.
+
+---
+
+TÂCHE M0.1 — Désinstaller better-sqlite3, installer Turso
+───────────────────────────────────────────────────────────
+
+Exécute dans le terminal :
+
+  npm uninstall better-sqlite3 @types/better-sqlite3
+  npm install @libsql/client
+  npm install drizzle-orm@latest
+
+Vérifie que package.json ne contient plus
+better-sqlite3 ni @types/better-sqlite3.
+
+Fichiers modifiés : package.json
+
+---
+
+TÂCHE M0.2 — Mettre à jour src/lib/db/client.ts
+─────────────────────────────────────────────────
+
+Réécrire src/lib/db/client.ts intégralement :
+
+  import { createClient } from '@libsql/client'
+  import { drizzle } from 'drizzle-orm/libsql'
+  import * as schema from './schema'
+
+  if (!process.env.TURSO_DATABASE_URL) {
+    throw new Error('TURSO_DATABASE_URL manquant')
+  }
+  if (!process.env.TURSO_AUTH_TOKEN) {
+    throw new Error('TURSO_AUTH_TOKEN manquant')
+  }
+
+  const client = createClient({
+    url:       process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  })
+
+  export const db = drizzle(client, { schema })
+
+Règles :
+- Zéro import better-sqlite3
+- Zéro référence à DB_PATH
+- Les deux variables d'env sont obligatoires —
+  l'app ne démarre pas sans elles (fail fast)
+
+Fichiers modifiés : src/lib/db/client.ts
+
+---
+
+TÂCHE M0.3 — Mettre à jour drizzle.config.ts
+─────────────────────────────────────────────
+
+Réécrire drizzle.config.ts intégralement :
+
+  import type { Config } from 'drizzle-kit'
+
+  export default {
+    schema:    './src/lib/db/schema.ts',
+    out:       './drizzle',
+    dialect:   'turso',
+    dbCredentials: {
+      url:       process.env.TURSO_DATABASE_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN!,
+    },
+  } satisfies Config
+
+Fichiers modifiés : drizzle.config.ts
+
+---
+
+TÂCHE M0.4 — Mettre à jour les variables d'environnement
+──────────────────────────────────────────────────────────
+
+Modifie .env.local :
+- Supprimer la ligne DB_PATH
+- Ajouter à la fin :
+
+  TURSO_DATABASE_URL=libsql://REMPLACER_PAR_TON_URL
+  TURSO_AUTH_TOKEN=REMPLACER_PAR_TON_TOKEN
+
+Note : les valeurs réelles seront renseignées manuellement
+après cette tâche — ne pas inventer de valeurs.
+
+Modifie .env.example (créer si absent) :
+  APP_PASSWORD=
+  SESSION_SECRET=
+  TURSO_DATABASE_URL=libsql://...
+  TURSO_AUTH_TOKEN=
+
+Ce fichier documente les variables requises sans exposer
+les vraies valeurs. Il est commité dans git.
+.env.local ne l'est jamais (vérifier .gitignore).
+
+Vérifier .gitignore :
+- .env.local doit être présent
+- .env*.local doit être présent
+- Si absent, ajouter les deux lignes
+
+Fichiers modifiés/créés :
+- .env.local
+- .env.example
+- .gitignore (vérification uniquement)
+
+---
+
+TÂCHE M0.5 — Adapter les queries async
+────────────────────────────────────────
+
+Turso est asynchrone par nature. better-sqlite3 était synchrone.
+Vérifier src/lib/db/queries.ts :
+
+Pour chaque fonction :
+- Vérifier qu'elle est bien async et retourne une Promise
+- Vérifier que tous les appels db sont bien awaités
+- Les signatures de fonctions ne changent pas —
+  seul l'implémentation interne si nécessaire
+
+Fonctions à vérifier une par une :
+  getVirtues()
+  getWeekEntries()
+  toggleMark()
+  getVirtueFocusForWeek()
+  getWeekScore()
+  getLast13WeeksScores()
+
+Si une fonction utilise des méthodes synchrones
+spécifiques à better-sqlite3 (.prepare(), .run(), .get(),
+.all()), les remplacer par les équivalents Drizzle async :
+  .all()    → await db.select()...
+  .get()    → await db.select()... puis [0]
+  .run()    → await db.insert() / .update() / .delete()
+
+Fichiers modifiés : src/lib/db/queries.ts
+
+---
+
+TÂCHE M0.6 — Adapter src/lib/db/seed.ts
+─────────────────────────────────────────
+
+Turso est asynchrone — le seed doit l'être aussi.
+
+Vérifier src/lib/db/seed.ts :
+- La fonction principale doit être async
+- Tous les appels db doivent être awaités
+- Utiliser INSERT OR REPLACE (upsert Drizzle) :
+
+  await db.insert(virtues)
+    .values(virtuesData)
+    .onConflictDoUpdate({
+      target: virtues.id,
+      set: {
+        name_fr:     sql`excluded.name_fr`,
+        name_en:     sql`excluded.name_en`,
+        description: sql`excluded.description`,
+        maxim:       sql`excluded.maxim`,
+      }
+    })
+
+- Logger "13 vertus mises à jour." en fin de script
+
+Fichiers modifiés : src/lib/db/seed.ts
+
+---
+
+TÂCHE M0.7 — Supprimer ensure-standalone.cjs
+──────────────────────────────────────────────
+
+Le fichier src/scripts/ensure-standalone.cjs
+n'est plus nécessaire avec Vercel.
+
+Supprimer : src/scripts/ensure-standalone.cjs
+
+Modifier package.json :
+- Supprimer la ligne "prestart"
+- Le script "start" devient :
+  "start": "node .next/standalone/server.js"
+
+Fichiers modifiés/supprimés :
+- src/scripts/ensure-standalone.cjs (supprimé)
+- package.json
+
+---
+
+TÂCHE M0.8 — Vérification TypeScript et build local
+─────────────────────────────────────────────────────
+
+Exécute dans l'ordre :
+
+  1. npx tsc --noEmit
+     → doit retourner zéro erreur
+
+  2. npm run build
+     → doit terminer sans "Killed"
+     → les 11 pages doivent être générées
+
+Si des erreurs TypeScript apparaissent liées à
+@libsql/client (types manquants), installer :
+  npm install --save-dev @libsql/client
+
+Fichiers modifiés : aucun (vérification uniquement)
+
+---
+
+TÂCHE M0.9 — Test de connexion Turso
+──────────────────────────────────────
+
+Avant de tester, l'utilisateur doit avoir renseigné
+les vraies valeurs dans .env.local :
+  TURSO_DATABASE_URL=libsql://franklin-virtues-xxx.turso.io
+  TURSO_AUTH_TOKEN=eyJ...
+
+Puis exécuter dans l'ordre :
+
+  1. npx drizzle-kit push
+     → applique le schéma sur la base Turso distante
+     → doit afficher "All changes applied"
+
+  2. npx tsx src/lib/db/seed.ts
+     → doit afficher "13 vertus mises à jour."
+
+  3. npm run dev
+     → l'app démarre sur localhost:3000
+
+  4. curl localhost:3000/api/week
+     → doit retourner un JSON valide avec les 13 vertus
+        dont les noms fr : "Énergie", "Écoute", "Clarté"...
+
+Fichiers modifiés : aucun (vérification uniquement)
+
+---
+
+RAPPELS NON-NÉGOCIABLES
+────────────────────────
+- Zéro couleur hardcodée dans les .tsx
+- Deux polices uniquement : Cormorant Garamond + DM Sans
+- Zéro localStorage
+- Maximum 300 lignes par fichier
+- Annoncer les fichiers avant de les créer ou modifier
+- Ne modifier que le nécessaire — zéro refactoring non demandé

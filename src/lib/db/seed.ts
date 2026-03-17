@@ -1,9 +1,7 @@
-import { loadEnvConfig } from "@next/env";
+import { sql } from "drizzle-orm";
 
 import { db } from "./client";
 import { virtues } from "./schema";
-
-loadEnvConfig(process.cwd());
 
 type SeedVirtue = {
   id: number;
@@ -121,24 +119,25 @@ const VIRTUES = [
   },
 ] satisfies ReadonlyArray<SeedVirtue>;
 
-function seedVirtues() {
-  for (const virtue of VIRTUES) {
-    db.insert(virtues)
-      .values(virtue)
-      .onConflictDoUpdate({
-        target: virtues.id,
-        set: {
-          nameFr: virtue.nameFr,
-          nameEn: virtue.nameEn,
-          description: virtue.description,
-          maxim: virtue.maxim,
-          weekNumber: virtue.weekNumber,
-        },
-      })
-      .run();
-  }
+async function seedVirtues() {
+  await db
+    .insert(virtues)
+    .values(VIRTUES)
+    .onConflictDoUpdate({
+      target: virtues.id,
+      set: {
+        nameFr: sql`excluded.name_fr`,
+        nameEn: sql`excluded.name_en`,
+        description: sql`excluded.description`,
+        maxim: sql`excluded.maxim`,
+        weekNumber: sql`excluded.week_number`,
+      },
+    });
 
   console.log("13 vertus mises à jour.");
 }
 
-seedVirtues();
+seedVirtues().catch((error: unknown) => {
+  console.error("Failed to seed virtues.", error);
+  process.exitCode = 1;
+});

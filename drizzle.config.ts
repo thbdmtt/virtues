@@ -1,15 +1,14 @@
 import { loadEnvConfig } from "@next/env";
-import { defineConfig } from "drizzle-kit";
+import type { Config } from "drizzle-kit";
 
 loadEnvConfig(process.cwd());
 
-export default defineConfig({
+export default {
   schema: "./src/lib/db/schema.ts",
   out: "./drizzle",
-  dialect: "sqlite",
+  dialect: "turso",
   dbCredentials: {
-    url: process.env.DB_PATH ?? "./local.db",
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
   },
-  strict: true,
-  verbose: true,
-});
+} satisfies Config;

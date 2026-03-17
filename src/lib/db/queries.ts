@@ -40,13 +40,13 @@ function getFocusVirtueId(weekStart: Date): number {
 }
 
 export async function getVirtues(): Promise<Virtue[]> {
-  return db.select().from(virtues).orderBy(asc(virtues.id)).all();
+  return await db.select().from(virtues).orderBy(asc(virtues.id));
 }
 
 export async function getWeekEntries(weekStart: Date): Promise<Entry[]> {
   const weekRange = getWeekRange(weekStart);
 
-  return db
+  return await db
     .select()
     .from(entries)
     .where(
@@ -55,46 +55,43 @@ export async function getWeekEntries(weekStart: Date): Promise<Entry[]> {
         lte(entries.date, weekRange.end),
       ),
     )
-    .orderBy(asc(entries.date), asc(entries.virtueId))
-    .all();
+    .orderBy(asc(entries.date), asc(entries.virtueId));
 }
 
 export async function toggleMark(date: string, virtueId: number): Promise<void> {
-  const existingEntry = db
+  const existingEntries = await db
     .select()
     .from(entries)
     .where(and(eq(entries.date, date), eq(entries.virtueId, virtueId)))
-    .limit(1)
-    .get();
+    .limit(1);
+  const existingEntry = existingEntries[0];
 
   if (!existingEntry) {
-    db.insert(entries).values({ date, virtueId, hasMark: true }).run();
+    await db.insert(entries).values({ date, virtueId, hasMark: true });
     return;
   }
 
   if (existingEntry.hasMark) {
-    db
+    await db
       .delete(entries)
-      .where(and(eq(entries.date, date), eq(entries.virtueId, virtueId)))
-      .run();
+      .where(and(eq(entries.date, date), eq(entries.virtueId, virtueId)));
     return;
   }
 
-  db
+  await db
     .update(entries)
     .set({ hasMark: true })
-    .where(and(eq(entries.date, date), eq(entries.virtueId, virtueId)))
-    .run();
+    .where(and(eq(entries.date, date), eq(entries.virtueId, virtueId)));
 }
 
 export async function getVirtueFocusForWeek(weekStart: Date): Promise<Virtue> {
   const virtueId = getFocusVirtueId(weekStart);
-  const virtue = db
+  const virtuesForWeek = await db
     .select()
     .from(virtues)
     .where(eq(virtues.id, virtueId))
-    .limit(1)
-    .get();
+    .limit(1);
+  const virtue = virtuesForWeek[0];
 
   if (!virtue) {
     throw new Error(`Virtue ${virtueId} not found for the requested week.`);
@@ -105,7 +102,7 @@ export async function getVirtueFocusForWeek(weekStart: Date): Promise<Virtue> {
 
 export async function getWeekScore(weekStart: Date): Promise<number> {
   const weekRange = getWeekRange(weekStart);
-  const result = db
+  const results = await db
     .select({ score: count() })
     .from(entries)
     .where(
@@ -114,8 +111,8 @@ export async function getWeekScore(weekStart: Date): Promise<number> {
         gte(entries.date, weekRange.start),
         lte(entries.date, weekRange.end),
       ),
-    )
-    .get();
+    );
+  const result = results[0];
 
   return result?.score ?? 0;
 }

@@ -8,14 +8,12 @@
     "db:migrate:prod": "npx drizzle-kit push",
     "db:seed:prod": "npx tsx src/lib/db/seed.ts",
     "generate:pwa": "tsx src/scripts/generate-icons.ts",
-    "prestart": "node src/scripts/ensure-standalone.cjs",
     "start": "node .next/standalone/server.js",
     "test": "vitest"
   },
   "dependencies": {
-    "@types/better-sqlite3": "^7.6.13",
+    "@libsql/client": "^0.17.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.6.2",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
     "framer-motion": "^12.36.0",
