@@ -4,7 +4,6 @@ import { format, isAfter, isSameDay, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { getScreenWeekVirtueLabel } from "@/lib/utils/virtueLabels";
 import { getWeekMarkKey } from "@/lib/utils/marks";
 import type { Virtue } from "@/types";
 
@@ -158,10 +157,9 @@ export default function ScreenWeek({
       />
 
       <div
-        className="grid shrink-0 grid-cols-[72px_repeat(7,minmax(0,1fr))] gap-[3px] px-[10px] pb-3 pt-4"
+        className="grid shrink-0 grid-cols-7 gap-[3px] px-[10px] pb-3 pt-4"
         style={{ alignItems: "center" }}
       >
-        <span aria-hidden="true" />
         {weekDays.map((day) => {
           const isToday = isSameDay(day, today);
 
@@ -188,7 +186,7 @@ export default function ScreenWeek({
             return (
               <div
                 key={virtue.id}
-                className="rounded-[18px] px-[10px] py-[8px]"
+                className="relative rounded-[18px] px-[10px] py-[8px]"
                 style={{
                   background: isFocus
                     ? "color-mix(in srgb, var(--gold) 5%, transparent)"
@@ -199,23 +197,28 @@ export default function ScreenWeek({
                 }}
               >
                 <div
-                  className="grid grid-cols-[72px_repeat(7,minmax(0,1fr))] gap-[3px]"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-0 right-0 top-1/2 overflow-hidden whitespace-nowrap text-center"
+                  style={{
+                    transform: "translateY(-50%)",
+                    zIndex: 0,
+                    color: isFocus ? "var(--gold)" : "var(--cream)",
+                    opacity: isFocus ? 0.13 : 0.055,
+                    fontFamily: "var(--font-display)",
+                    fontSize: "15px",
+                    fontStyle: "italic",
+                    fontWeight: 300,
+                    letterSpacing: "0.08em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {virtue.nameFr}
+                </div>
+
+                <div
+                  className="relative z-[1] grid grid-cols-7 gap-[3px]"
                   style={{ alignItems: "center" }}
                 >
-                  <p
-                    title={virtue.nameFr}
-                    className="overflow-hidden whitespace-nowrap pr-[6px] text-right text-[8px] font-light tracking-[0.08em] text-ellipsis"
-                    style={{
-                      color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
-                      opacity: isFocus ? 0.7 : 0.35,
-                      fontFamily: "var(--font-body)",
-                      transition:
-                        "opacity var(--transition-base), color var(--transition-base)",
-                    }}
-                  >
-                    {getScreenWeekVirtueLabel(virtue.nameFr)}
-                  </p>
-
                   {weekDays.map((day, dayIdx) => {
                     const isToday = isSameDay(day, today);
                     const isFuture = isAfter(startOfDay(day), today);
