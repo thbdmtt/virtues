@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import CycleDial from "@/components/CycleDial";
 import {
@@ -11,12 +11,19 @@ import {
 import type { CycleStatsData, HistoryItem, Trend } from "@/types";
 
 type CyclePageProps = {
-  currentFocusName: string;
   history: HistoryItem[];
   stats: CycleStatsData;
 };
 
-function getBarHeight(score: number, maxScore: number): number {
+function getBarHeight(
+  score: number,
+  maxScore: number,
+  hasOnlyZeroScores: boolean,
+): number {
+  if (hasOnlyZeroScores) {
+    return 4;
+  }
+
   if (maxScore <= 0) {
     return 0;
   }
@@ -48,7 +55,15 @@ function getTrendCopy(trend: Trend): { color: string; label: string } {
 function getBarColor(
   score: number,
   isCurrentWeek: boolean,
+  hasOnlyZeroScores: boolean,
 ): { color: string; opacity: number } {
+  if (hasOnlyZeroScores) {
+    return {
+      color: "var(--cream-dim)",
+      opacity: 0.15,
+    };
+  }
+
   if (isCurrentWeek) {
     return {
       color: "var(--gold)",
@@ -76,10 +91,10 @@ function getBarColor(
 }
 
 export default function CyclePage({
-  currentFocusName,
   history,
   stats,
 }: CyclePageProps) {
+  const router = useRouter();
   const segments = getCurrentCycleSegments(
     stats.weeklyScores,
     stats.currentCycleWeek,
@@ -92,53 +107,45 @@ export default function CyclePage({
   const currentWeekStart =
     stats.weeklyScores[stats.weeklyScores.length - 1]?.weekStart ?? "";
   const trendCopy = getTrendCopy(stats.trend);
+  const hasOnlyZeroScores = recentWeeks.every((week) => week.score === 0);
+  const hasHardestVirtueData = stats.hardestVirtue.totalMarks > 0;
 
   return (
     <main
       className="min-h-screen"
       style={{
         padding:
-          "max(var(--safe-top), 40px) calc(24px + var(--safe-right)) max(var(--safe-bottom), 36px) calc(24px + var(--safe-left))",
+          "calc(var(--safe-top) + 20px) calc(28px + var(--safe-right)) calc(var(--safe-bottom) + 28px) calc(28px + var(--safe-left))",
       }}
     >
       <div className="mx-auto flex w-full max-w-[420px] flex-col gap-8">
-        <header className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <p
-              className="text-[9px] font-light uppercase tracking-[0.22em]"
-              style={{ color: "var(--cream-dim)", fontFamily: "var(--font-body)" }}
-            >
-              Cycle
-            </p>
-            <h1
-              className="text-[clamp(34px,9vw,42px)] font-light leading-none"
-              style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
-            >
-              Vue du cycle
-            </h1>
-            <p
-              className="text-[10px] font-light"
-              style={{ color: "var(--cream-mid)", fontFamily: "var(--font-body)" }}
-            >
-              Focus actuel · {currentFocusName}
-            </p>
-          </div>
-          <Link
-            href="/"
-            className="tracker-focus-ring inline-flex rounded-full border px-4 py-2 text-[10px] font-light uppercase tracking-[0.18em]"
+        <header className="mb-6 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="tracker-focus-ring text-[11px] font-light hover:opacity-90"
             style={{
-              borderColor: "var(--gold-line)",
               color: "var(--cream-dim)",
               fontFamily: "var(--font-body)",
-              transition:
-                "border-color var(--transition-base), color var(--transition-base), background-color var(--transition-base)",
+              opacity: 0.5,
+              transition: "opacity var(--transition-base)",
             }}
           >
-            Retour
-          </Link>
+            ←
+          </button>
+          <p
+            className="text-[12px] font-light italic"
+            style={{
+              color: "var(--cream-dim)",
+              fontFamily: "var(--font-display)",
+              opacity: 0.6,
+            }}
+          >
+            Semaine {stats.currentCycleWeek} · 13
+          </p>
         </header>
 
-        <section className="space-y-6">
+        <section>
           <CycleDial
             currentCycleWeek={stats.currentCycleWeek}
             segments={segments}
@@ -158,18 +165,33 @@ export default function CyclePage({
           >
             Vertu la plus difficile
           </p>
-          <h2
-            className="text-[clamp(28px,7vw,36px)] font-light leading-none"
-            style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
-          >
-            {stats.hardestVirtue.nameFr}
-          </h2>
-          <p
-            className="text-[10px] font-light"
-            style={{ color: "var(--cream-dim)", fontFamily: "var(--font-body)" }}
-          >
-            {stats.hardestVirtue.totalMarks} manquements sur {stats.weeklyScores.length} semaines
-          </p>
+          {hasHardestVirtueData ? (
+            <>
+              <h2
+                className="text-[clamp(28px,7vw,36px)] font-light leading-none"
+                style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
+              >
+                {stats.hardestVirtue.nameFr}
+              </h2>
+              <p
+                className="text-[10px] font-light"
+                style={{ color: "var(--cream-dim)", fontFamily: "var(--font-body)" }}
+              >
+                {stats.hardestVirtue.totalMarks} manquements sur {stats.weeklyScores.length} semaines
+              </p>
+            </>
+          ) : (
+            <p
+              className="text-[10px] font-light italic"
+              style={{
+                color: "var(--cream-dim)",
+                fontFamily: "var(--font-body)",
+                opacity: 0.5,
+              }}
+            >
+              Données insuffisantes
+            </p>
+          )}
         </section>
 
         <div
@@ -189,7 +211,11 @@ export default function CyclePage({
           <div className="flex items-end justify-between gap-3">
             {recentWeeks.map((week, index) => {
               const isCurrentWeek = week.weekStart === currentWeekStart;
-              const barColor = getBarColor(week.score, isCurrentWeek);
+              const barColor = getBarColor(
+                week.score,
+                isCurrentWeek,
+                hasOnlyZeroScores,
+              );
 
               return (
                 <div
@@ -200,7 +226,11 @@ export default function CyclePage({
                     <span
                       className="w-5 rounded-t-[6px]"
                       style={{
-                        height: `${getBarHeight(week.score, maxRecentScore)}px`,
+                        height: `${getBarHeight(
+                          week.score,
+                          maxRecentScore,
+                          hasOnlyZeroScores,
+                        )}px`,
                         backgroundColor: barColor.color,
                         opacity: barColor.opacity,
                         transition:

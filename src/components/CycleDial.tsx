@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import { getDialScoreTone } from "@/lib/utils/cycleStats";
 import type { CycleSegment } from "@/types";
 
 type CycleDialProps = {
@@ -11,11 +10,6 @@ type CycleDialProps = {
 };
 
 const CANVAS_SIZE = 260;
-const CENTER = CANVAS_SIZE / 2;
-const OUTER_RADIUS = 118;
-const INNER_RADIUS = 86;
-const HOLE_RADIUS = 68;
-const SEGMENT_GAP = 0.08;
 
 function getTokenValue(styles: CSSStyleDeclaration, token: string): string {
   return styles.getPropertyValue(token).trim();
@@ -50,19 +44,22 @@ function getSegmentFillColor(
   }
 
   if (segment.state === "current") {
-    return getTokenValue(styles, "--gold-trace");
+    return getTokenValue(styles, "--gold-trace-strong");
   }
 
-  switch (getDialScoreTone(segment.score ?? 0)) {
-    case "low":
-      return getTokenValue(styles, "--cycle-dial-low");
-    case "mid":
-      return getTokenValue(styles, "--cycle-dial-mid");
-    case "high":
-      return getTokenValue(styles, "--cycle-dial-high");
-    case "critical":
-      return getTokenValue(styles, "--cycle-dial-critical");
+  if ((segment.score ?? 0) === 0) {
+    return getTokenValue(styles, "--cycle-dial-zero");
   }
+
+  if ((segment.score ?? 0) <= 3) {
+    return getTokenValue(styles, "--cycle-dial-low");
+  }
+
+  if ((segment.score ?? 0) <= 7) {
+    return getTokenValue(styles, "--cycle-dial-mid");
+  }
+
+  return getTokenValue(styles, "--cycle-dial-high");
 }
 
 function drawCycle(
@@ -84,7 +81,13 @@ function drawCycle(
   const displayFont = getTokenValue(styles, "--font-display") || "serif";
   const bodyFont = getTokenValue(styles, "--font-body") || "sans-serif";
   const voidColor = getTokenValue(styles, "--void");
-  const segmentAngle = (Math.PI * 2) / segments.length;
+  const centerX = CANVAS_SIZE / 2;
+  const centerY = CANVAS_SIZE / 2;
+  const outerRadius = CANVAS_SIZE * 0.44;
+  const innerRadius = CANVAS_SIZE * 0.3;
+  const holeRadius = innerRadius - 2;
+  const segmentGap = 0.035;
+  const segmentCount = segments.length;
 
   canvas.width = CANVAS_SIZE * ratio;
   canvas.height = CANVAS_SIZE * ratio;
@@ -96,13 +99,15 @@ function drawCycle(
   context.lineJoin = "round";
 
   segments.forEach((segment, index) => {
-    const startAngle = -Math.PI / 2 + index * segmentAngle + SEGMENT_GAP / 2;
-    const endAngle = -Math.PI / 2 + (index + 1) * segmentAngle - SEGMENT_GAP / 2;
+    const startAngle =
+      (index / segmentCount) * Math.PI * 2 - Math.PI / 2 + segmentGap;
+    const endAngle =
+      ((index + 1) / segmentCount) * Math.PI * 2 - Math.PI / 2 - segmentGap;
 
     context.save();
     context.beginPath();
-    context.arc(CENTER, CENTER, OUTER_RADIUS, startAngle, endAngle);
-    context.arc(CENTER, CENTER, INNER_RADIUS, endAngle, startAngle, true);
+    context.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+    context.arc(centerX, centerY, innerRadius, endAngle, startAngle, true);
     context.closePath();
     context.fillStyle = getSegmentFillColor(styles, segment);
     context.globalAlpha = segment.state === "future" ? 0.4 : 1;
@@ -110,7 +115,7 @@ function drawCycle(
     context.globalAlpha = 1;
 
     if (segment.state === "current") {
-      context.lineWidth = 1.5;
+      context.lineWidth = 1;
       context.strokeStyle = gold;
       context.stroke();
     }
@@ -119,19 +124,19 @@ function drawCycle(
   });
 
   context.beginPath();
-  context.arc(CENTER, CENTER, HOLE_RADIUS, 0, Math.PI * 2);
+  context.arc(centerX, centerY, holeRadius, 0, Math.PI * 2);
   context.fillStyle = voidColor;
   context.fill();
 
   context.fillStyle = cream;
-  context.font = `300 32px ${displayFont}`;
+  context.font = `300 28px ${displayFont}`;
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(String(currentCycleWeek), CENTER, CENTER - 12);
+  context.fillText(String(currentCycleWeek), centerX, centerY - 10);
 
   context.fillStyle = creamDim;
-  context.font = `300 8px ${bodyFont}`;
-  drawSpacedText(context, "SEMAINE", CENTER, CENTER + 14, 2);
+  context.font = `300 7px ${bodyFont}`;
+  drawSpacedText(context, "SEMAINE", centerX, centerY + 14, 1.4);
 }
 
 export default function CycleDial({

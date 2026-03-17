@@ -32,15 +32,11 @@ export default function VirtueDetail({
   }
 
   function getAnimate(y: number) {
-    return shouldReduceMotion
-      ? { opacity: 1 }
-      : { opacity: 1, y: 0 };
+    return shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 };
   }
 
   function getInitial(y: number) {
-    return shouldReduceMotion
-      ? { opacity: 1 }
-      : { opacity: 0, y };
+    return shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y };
   }
 
   return (
@@ -48,14 +44,20 @@ export default function VirtueDetail({
       className="min-h-screen"
       style={{
         padding:
-          "max(var(--safe-top), 52px) calc(28px + var(--safe-right)) max(var(--safe-bottom), 36px) calc(28px + var(--safe-left))",
+          "calc(var(--safe-top) + 20px) calc(28px + var(--safe-right)) calc(var(--safe-bottom) + 28px) calc(28px + var(--safe-left))",
       }}
     >
-      <div className="mx-auto flex min-h-[calc(100vh-max(var(--safe-top),52px)-max(var(--safe-bottom),36px))] w-full max-w-[680px] flex-col">
+      <div
+        className="flex w-full max-w-[680px] flex-col"
+        style={{
+          minHeight:
+            "calc(100vh - var(--safe-top) - var(--safe-bottom) - 48px)",
+        }}
+      >
         <button
           type="button"
           onClick={() => router.back()}
-          className="tracker-focus-ring w-fit text-[11px] font-light hover:opacity-90"
+          className="tracker-focus-ring mb-6 w-fit text-[11px] font-light hover:opacity-90"
           style={{
             color: "var(--cream-dim)",
             fontFamily: "var(--font-body)",
@@ -70,7 +72,7 @@ export default function VirtueDetail({
           initial={getInitial(8)}
           animate={getAnimate(8)}
           transition={getTransition(0)}
-          className="mt-5 text-[9px] font-light uppercase tracking-[0.4em]"
+          className="mb-2 text-[8px] font-light uppercase tracking-[0.4em]"
           style={{ color: "var(--gold-soft)", fontFamily: "var(--font-body)" }}
         >
           {getVirtueNumber(virtue.id)}
@@ -80,17 +82,17 @@ export default function VirtueDetail({
           initial={getInitial(12)}
           animate={getAnimate(12)}
           transition={getTransition(0.08)}
-          className="mt-4 text-[clamp(52px,13vw,68px)] font-light leading-[0.88] tracking-[-0.025em]"
+          className="mb-4 text-[clamp(48px,12vw,64px)] font-light leading-[0.88] tracking-[-0.025em]"
           style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
         >
           {virtue.nameFr}
         </motion.h1>
 
         <motion.div
-          initial={shouldReduceMotion ? { width: 40 } : { width: 0 }}
-          animate={{ width: 40 }}
+          initial={shouldReduceMotion ? { width: 32 } : { width: 0 }}
+          animate={{ width: 32 }}
           transition={getTransition(0.16)}
-          className="my-5 h-px"
+          className="mb-[18px] h-px"
           style={{ background: "var(--gold)", opacity: 0.4 }}
         />
 
@@ -98,11 +100,11 @@ export default function VirtueDetail({
           initial={getInitial(0)}
           animate={getAnimate(0)}
           transition={getTransition(0.22)}
-          className="text-[15px] font-light italic"
+          className="mb-7 text-[14px] font-light italic"
           style={{
             color: "var(--cream-mid)",
             fontFamily: "var(--font-display)",
-            lineHeight: 1.8,
+            lineHeight: 1.75,
             opacity: 0.8,
           }}
         >
@@ -113,18 +115,21 @@ export default function VirtueDetail({
           initial={getInitial(0)}
           animate={getAnimate(0)}
           transition={getTransition(0.3)}
-          className="mt-8 space-y-[18px]"
-          style={{
-            color: "var(--cream-mid)",
-            fontFamily: "var(--font-display)",
-            fontSize: "17px",
-            fontWeight: 300,
-            lineHeight: 1.9,
-            opacity: 0.75,
-          }}
+          className="space-y-[14px]"
         >
-          {reflectionParagraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
+          {reflectionParagraphs.map((paragraph, index) => (
+            <p
+              key={`${virtue.id}-${index}`}
+              className="text-[16px] font-light"
+              style={{
+                color: "var(--cream-mid)",
+                fontFamily: "var(--font-display)",
+                lineHeight: 1.7,
+                opacity: 0.72,
+              }}
+            >
+              {paragraph}
+            </p>
           ))}
         </motion.div>
 

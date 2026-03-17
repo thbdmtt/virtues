@@ -17,14 +17,17 @@ type CloseButtonProps = {
   onClose: () => void;
 };
 
-function getOrderedVirtues(virtues: Virtue[]): Virtue[] {
-  return [...virtues].sort((firstVirtue, secondVirtue) => {
-    return firstVirtue.id - secondVirtue.id;
-  });
-}
-
 function formatVirtueNumber(value: number): string {
   return String(value).padStart(2, "0");
+}
+
+function getOrderedVirtues(virtues: Virtue[], focusId: number): Virtue[] {
+  const focusVirtue = virtues.find((virtue) => virtue.id === focusId);
+  const remainingVirtues = [...virtues]
+    .filter((virtue) => virtue.id !== focusId)
+    .sort((firstVirtue, secondVirtue) => firstVirtue.id - secondVirtue.id);
+
+  return focusVirtue ? [focusVirtue, ...remainingVirtues] : remainingVirtues;
 }
 
 function CloseButton({ onClose }: CloseButtonProps) {
@@ -33,23 +36,18 @@ function CloseButton({ onClose }: CloseButtonProps) {
       type="button"
       aria-label="Fermer le menu"
       onClick={onClose}
-      className="tracker-focus-ring inline-flex h-11 w-11 items-center justify-center rounded-full"
+      className="tracker-focus-ring absolute z-[2] inline-flex items-center justify-center hover:opacity-90"
       style={{
-        backgroundColor: "color-mix(in srgb, var(--surface) 84%, transparent)",
-        transition:
-          "background-color var(--transition-base), transform var(--transition-base)",
+        top: "max(var(--safe-top), 52px)",
+        right: "calc(28px + var(--safe-right))",
+        color: "var(--cream-dim)",
+        fontFamily: "var(--font-body)",
+        fontSize: "16px",
+        opacity: 0.5,
+        transition: "opacity var(--transition-base)",
       }}
     >
-      <span className="relative block h-[18px] w-[18px]">
-        <span
-          className="absolute left-0 top-1/2 block h-px w-[18px] -translate-y-1/2 rotate-45"
-          style={{ backgroundColor: "var(--cream-dim)" }}
-        />
-        <span
-          className="absolute left-0 top-1/2 block h-px w-[18px] -translate-y-1/2 -rotate-45"
-          style={{ backgroundColor: "var(--cream-dim)" }}
-        />
-      </span>
+      ×
     </button>
   );
 }
@@ -62,7 +60,7 @@ export default function MenuPanel({
 }: MenuPanelProps) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const router = useRouter();
-  const orderedVirtues = getOrderedVirtues(virtues);
+  const orderedVirtues = getOrderedVirtues(virtues, focusId);
 
   useEffect(() => {
     if (!isOpen) {
@@ -113,6 +111,7 @@ export default function MenuPanel({
         backgroundColor: "color-mix(in srgb, var(--void) 92%, transparent)",
       }}
     >
+      <CloseButton onClose={onClose} />
       <motion.div
         initial={false}
         animate={
@@ -133,12 +132,8 @@ export default function MenuPanel({
           boxShadow: "var(--shadow-panel), var(--shadow-inset)",
         }}
       >
-        <div className="flex justify-end px-7 pt-7">
-          <CloseButton onClose={onClose} />
-        </div>
-
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-12">
-          {orderedVirtues.map((virtue) => {
+          {orderedVirtues.map((virtue, index) => {
             const isFocus = virtue.id === focusId;
 
             return (
@@ -146,59 +141,39 @@ export default function MenuPanel({
                 key={virtue.id}
                 type="button"
                 onClick={() => handleOpenVirtue(virtue.id)}
-                className="tracker-focus-ring block w-full border-b py-4 text-left"
+                className="tracker-focus-ring block w-full border-b py-[13px] text-left"
                 style={{
                   borderBottomColor:
                     "color-mix(in srgb, var(--cream) 5%, transparent)",
+                  borderTopColor:
+                    index === 0
+                      ? "color-mix(in srgb, var(--cream) 5%, transparent)"
+                      : undefined,
+                  borderTopWidth: index === 0 ? "1px" : undefined,
                   transition: "opacity var(--transition-base)",
                 }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="text-[9px] font-light uppercase tracking-[0.25em]"
-                      style={{ color: "var(--cream-dim)", opacity: 0.5 }}
-                    >
-                      {formatVirtueNumber(virtue.id)}
-                    </span>
-                    {isFocus ? (
-                      <span
-                        className="text-[8px] font-light uppercase tracking-[0.2em]"
-                        style={{ color: "var(--gold)" }}
-                      >
-                        Focus
-                      </span>
-                    ) : null}
-                  </div>
+                <div className="flex items-center gap-4">
                   <span
-                    className="text-[10px] font-light uppercase tracking-[0.18em]"
-                    style={{ color: "var(--cream-dim)", opacity: 0.55 }}
+                    className="min-w-[20px] text-[9px] font-light uppercase tracking-[0.2em]"
+                    style={{
+                      color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
+                      fontFamily: "var(--font-body)",
+                      opacity: isFocus ? 1 : 0.6,
+                    }}
                   >
-                    {virtue.nameEn}
+                    {formatVirtueNumber(virtue.id)}
+                  </span>
+                  <span
+                    className="text-[clamp(20px,5.5vw,26px)] font-light leading-none tracking-[-0.01em]"
+                    style={{
+                      color: isFocus ? "var(--gold)" : "var(--cream)",
+                      fontFamily: "var(--font-display)",
+                    }}
+                  >
+                    {virtue.nameFr}
                   </span>
                 </div>
-
-                <p
-                  className="mt-2 text-[clamp(22px,6vw,28px)] font-light tracking-[-0.01em]"
-                  style={{
-                    color: "var(--cream)",
-                    fontFamily: "var(--font-display)",
-                  }}
-                >
-                  {virtue.nameFr}
-                </p>
-
-                <p
-                  className="mt-2 text-[12px] font-light italic"
-                  style={{
-                    color: "var(--cream-mid)",
-                    opacity: 0.6,
-                    fontFamily: "var(--font-display)",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {virtue.description}
-                </p>
               </button>
             );
           })}
