@@ -38,6 +38,29 @@ export type WeekScore = {
 
 export type HistoryItem = WeekScore;
 
+export type Trend = "improving" | "stable" | "declining";
+
+export type HardestVirtue = {
+  id: number;
+  nameFr: string;
+  totalMarks: number;
+};
+
+export type CycleSegmentState = "completed" | "current" | "future";
+
+export type CycleSegment = {
+  weekNumber: number;
+  score: number | null;
+  state: CycleSegmentState;
+};
+
+export type CycleStatsData = {
+  hardestVirtue: HardestVirtue;
+  weeklyScores: WeekScore[];
+  currentCycleWeek: number;
+  trend: Trend;
+};
+
 export type PushSubscriptionKeys = {
   p256dh: string;
   auth: string;

@@ -8,6 +8,7 @@ import {
 import { and, asc, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
 
 import type {
+  HardestVirtue,
   Entry,
   HistoryItem,
   PushSubscriptionInput,
@@ -43,6 +44,15 @@ function getFocusVirtueId(weekStart: Date): number {
   const isoWeekNumber = getISOWeek(normalizeWeekStart(weekStart));
 
   return ((isoWeekNumber - 1) % CYCLE_LENGTH) + 1;
+}
+
+function getHistoryRange(): { start: string; end: string } {
+  const currentWeekStart = normalizeWeekStart(new Date());
+
+  return {
+    start: formatDateKey(subWeeks(currentWeekStart, HISTORY_LENGTH - 1)),
+    end: formatDateKey(addDays(currentWeekStart, 6)),
+  };
 }
 
 export async function getVirtues(): Promise<Virtue[]> {
@@ -135,6 +145,55 @@ export async function getLast13WeeksScores(): Promise<HistoryItem[]> {
       score: await getWeekScore(weekStart),
     })),
   );
+}
+
+export async function getHardestVirtue(): Promise<HardestVirtue> {
+  const historyRange = getHistoryRange();
+  const [virtuesList, markedEntries] = await Promise.all([
+    getVirtues(),
+    db
+      .select({ virtueId: entries.virtueId })
+      .from(entries)
+      .where(
+        and(
+          eq(entries.hasMark, true),
+          gte(entries.date, historyRange.start),
+          lte(entries.date, historyRange.end),
+        ),
+      ),
+  ]);
+  const totals = markedEntries.reduce<Map<number, number>>((map, entry) => {
+    const currentTotal = map.get(entry.virtueId) ?? 0;
+
+    map.set(entry.virtueId, currentTotal + 1);
+    return map;
+  }, new Map<number, number>());
+  const firstVirtue = virtuesList[0];
+
+  if (!firstVirtue) {
+    throw new Error("No virtues available to compute hardest virtue.");
+  }
+
+  return virtuesList.reduce<HardestVirtue>((hardest, virtue) => {
+    const totalMarks = totals.get(virtue.id) ?? 0;
+
+    if (
+      totalMarks > hardest.totalMarks ||
+      (totalMarks === hardest.totalMarks && virtue.id < hardest.id)
+    ) {
+      return {
+        id: virtue.id,
+        nameFr: virtue.nameFr,
+        totalMarks,
+      };
+    }
+
+    return hardest;
+  }, {
+    id: firstVirtue.id,
+    nameFr: firstVirtue.nameFr,
+    totalMarks: totals.get(firstVirtue.id) ?? 0,
+  });
 }
 
 export async function savePushSubscription(

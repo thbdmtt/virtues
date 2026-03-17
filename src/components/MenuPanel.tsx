@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Virtue } from "@/types";
@@ -60,6 +61,7 @@ export default function MenuPanel({
   onClose,
 }: MenuPanelProps) {
   const shouldReduceMotion = useReducedMotion() ?? false;
+  const router = useRouter();
   const [expandedVirtueId, setExpandedVirtueId] = useState<number | null>(null);
   const orderedVirtues = getOrderedVirtues(virtues);
 
@@ -86,6 +88,11 @@ export default function MenuPanel({
     setExpandedVirtueId((currentVirtueId) => {
       return currentVirtueId === virtueId ? null : virtueId;
     });
+  }
+
+  function handleOpenCycle() {
+    onClose();
+    router.push("/cycle");
   }
 
   return (
@@ -238,6 +245,22 @@ export default function MenuPanel({
               </button>
             );
           })}
+
+          <button
+            type="button"
+            onClick={handleOpenCycle}
+            className="tracker-focus-ring mt-6 w-full border-t pt-5 text-left"
+            style={{
+              borderTopColor: "color-mix(in srgb, var(--cream) 8%, transparent)",
+            }}
+          >
+            <span
+              className="text-[11px] font-light uppercase tracking-[0.2em]"
+              style={{ color: "var(--cream-dim)", fontFamily: "var(--font-body)" }}
+            >
+              Cycle
+            </span>
+          </button>
         </div>
       </motion.div>
     </motion.aside>

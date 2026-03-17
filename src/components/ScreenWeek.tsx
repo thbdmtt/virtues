@@ -4,6 +4,7 @@ import { format, isAfter, isSameDay, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { getScreenWeekVirtueLabel } from "@/lib/utils/virtueLabels";
 import { getWeekMarkKey } from "@/lib/utils/marks";
 import type { Virtue } from "@/types";
 
@@ -157,7 +158,7 @@ export default function ScreenWeek({
       />
 
       <div
-        className="grid shrink-0 grid-cols-[10px_repeat(7,minmax(0,1fr))] gap-[3px] px-[10px] pb-3 pt-4"
+        className="grid shrink-0 grid-cols-[72px_repeat(7,minmax(0,1fr))] gap-[3px] px-[10px] pb-3 pt-4"
         style={{ alignItems: "center" }}
       >
         <span aria-hidden="true" />
@@ -198,20 +199,22 @@ export default function ScreenWeek({
                 }}
               >
                 <div
-                  className="grid grid-cols-[10px_repeat(7,minmax(0,1fr))] gap-[3px]"
+                  className="grid grid-cols-[72px_repeat(7,minmax(0,1fr))] gap-[3px]"
                   style={{ alignItems: "center" }}
                 >
-                  <span
-                    aria-hidden="true"
-                    className="h-[10px] w-[10px] rounded-full"
+                  <p
+                    title={virtue.nameFr}
+                    className="overflow-hidden whitespace-nowrap pr-[6px] text-right text-[8px] font-light tracking-[0.08em] text-ellipsis"
                     style={{
-                      backgroundColor: isFocus ? "var(--gold)" : "var(--cream-dim)",
-                      opacity: isFocus ? 0.88 : 0.2,
-                      boxShadow: isFocus ? "0 0 12px var(--gold-trace)" : "none",
+                      color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
+                      opacity: isFocus ? 0.7 : 0.35,
+                      fontFamily: "var(--font-body)",
                       transition:
-                        "opacity var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base)",
+                        "opacity var(--transition-base), color var(--transition-base)",
                     }}
-                  />
+                  >
+                    {getScreenWeekVirtueLabel(virtue.nameFr)}
+                  </p>
 
                   {weekDays.map((day, dayIdx) => {
                     const isToday = isSameDay(day, today);
