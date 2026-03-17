@@ -40,7 +40,7 @@ export default async function VirtuePage({ params }: PageProps) {
   return (
     <VirtueDetail
       virtue={virtue}
-      isCurrentFocus={focusVirtue.id === virtue.id}
+      isFocus={focusVirtue.id === virtue.id}
     />
   );
 }

@@ -1,146 +1,156 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-import { getReflectionParagraphs } from "@/lib/utils/reflection";
 import type { Virtue } from "@/types";
 
-type VirtueDetailProps = {
+type Props = {
   virtue: Virtue;
-  isCurrentFocus: boolean;
+  isFocus: boolean;
 };
 
-const ENTRY_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-function getVirtueNumber(id: number): string {
-  return String(id).padStart(2, "0");
+function getSentences(reflection: string): string[] {
+  return reflection
+    ? reflection
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) => sentence.trim().length > 0)
+    : [];
 }
 
 function getVirtueNumberLabel(id: number): string {
-  if (id < 10) {
-    return getVirtueNumber(id).split("").join(" ");
-  }
-
-  return String(id);
+  return id < 10 ? `0 ${id}` : String(id);
 }
 
-export default function VirtueDetail({
-  virtue,
-  isCurrentFocus: _isCurrentFocus,
-}: VirtueDetailProps) {
+export default function VirtueDetail({ virtue, isFocus }: Props) {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion() ?? false;
-  const reflectionParagraphs = getReflectionParagraphs(virtue.reflection);
-
-  function getTransition(delay: number) {
-    return shouldReduceMotion
-      ? { duration: 0.15 }
-      : { duration: 0.5, ease: ENTRY_EASE, delay };
-  }
-
-  function getAnimate(y: number) {
-    return shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 };
-  }
-
-  function getInitial(y: number) {
-    return shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y };
-  }
+  const sentences = getSentences(virtue.reflection);
+  const numDisplay = getVirtueNumberLabel(virtue.id);
 
   return (
-    <main
-      className="min-h-screen"
+    <div
       style={{
-        padding:
-          "max(var(--safe-top), 52px) calc(28px + var(--safe-right)) max(var(--safe-bottom), 40px) calc(28px + var(--safe-left))",
+        position: "fixed",
+        inset: 0,
+        background: "var(--void)",
+        display: "flex",
+        flexDirection: "column",
+        paddingTop: "max(var(--safe-top), 52px)",
+        paddingLeft: "calc(28px + var(--safe-left))",
+        paddingRight: "calc(28px + var(--safe-right))",
+        paddingBottom: "max(var(--safe-bottom), 40px)",
+        overflowY: "auto",
       }}
     >
-      <div
-        className="flex w-full max-w-[680px] flex-col"
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="tracker-focus-ring"
         style={{
-          minHeight:
-            "calc(100vh - var(--safe-top) - var(--safe-bottom) - 48px)",
+          background: "none",
+          border: "none",
+          color: "var(--cream-dim)",
+          fontSize: "16px",
+          opacity: 0.6,
+          cursor: "pointer",
+          padding: "0",
+          marginBottom: "28px",
+          textAlign: "left",
+          fontFamily: "var(--font-body)",
+          letterSpacing: "0.05em",
+          alignSelf: "flex-start",
         }}
       >
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="tracker-focus-ring mb-7 w-fit text-[13px] font-light hover:opacity-90"
+        ←
+      </button>
+
+      <div
+        style={{
+          fontFamily: "var(--font-body)",
+          fontSize: "9px",
+          fontWeight: 300,
+          letterSpacing: "0.4em",
+          color: "var(--gold-soft)",
+          marginBottom: "6px",
+        }}
+      >
+        {numDisplay}
+      </div>
+
+      <div
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "clamp(48px, 12vw, 64px)",
+          fontWeight: 300,
+          color: "var(--cream)",
+          letterSpacing: "-0.025em",
+          lineHeight: 0.9,
+          marginBottom: "14px",
+        }}
+      >
+        {virtue.nameFr}
+      </div>
+
+      <div
+        style={{
+          width: "40px",
+          height: "1px",
+          background: "var(--gold)",
+          opacity: 0.4,
+          marginBottom: "18px",
+        }}
+      />
+
+      {virtue.maxim ? (
+        <div
           style={{
-            color: "var(--cream-dim)",
-            fontFamily: "var(--font-body)",
-            opacity: 0.45,
-            transition: "opacity var(--transition-base)",
-          }}
-        >
-          ←
-        </button>
-
-        <motion.p
-          initial={getInitial(8)}
-          animate={getAnimate(8)}
-          transition={getTransition(0)}
-          className="mb-2 text-[9px] font-light uppercase tracking-[0.4em]"
-          style={{ color: "var(--gold-soft)", fontFamily: "var(--font-body)" }}
-        >
-          {getVirtueNumberLabel(virtue.id)}
-        </motion.p>
-
-        <motion.h1
-          initial={getInitial(12)}
-          animate={getAnimate(12)}
-          transition={getTransition(0.08)}
-          className="mb-[14px] text-[clamp(48px,12vw,60px)] font-light leading-[0.9] tracking-[-0.025em]"
-          style={{ color: "var(--cream)", fontFamily: "var(--font-display)" }}
-        >
-          {virtue.nameFr}
-        </motion.h1>
-
-        <motion.div
-          initial={shouldReduceMotion ? { width: 40 } : { width: 0 }}
-          animate={{ width: 40 }}
-          transition={getTransition(0.16)}
-          className="mb-[18px] h-px"
-          style={{ background: "var(--gold)", opacity: 0.4 }}
-        />
-
-        <motion.p
-          initial={getInitial(0)}
-          animate={getAnimate(0)}
-          transition={getTransition(0.22)}
-          className="mb-6 text-[13px] font-light italic"
-          style={{
-            color: "var(--cream-mid)",
             fontFamily: "var(--font-display)",
+            fontSize: "14px",
+            fontStyle: "italic",
+            fontWeight: 300,
+            color: "var(--cream-mid)",
+            opacity: 0.8,
             lineHeight: 1.75,
-            opacity: 0.75,
+            marginBottom: "28px",
           }}
         >
           {`«\u00a0${virtue.maxim}\u00a0»`}
-        </motion.p>
+        </div>
+      ) : null}
 
-        <motion.div
-          initial={getInitial(0)}
-          animate={getAnimate(0)}
-          transition={getTransition(0.3)}
-        >
-          {reflectionParagraphs.map((paragraph, index) => (
-            <p
-              key={`${virtue.id}-${index}`}
-              className="text-[16px] font-light"
-              style={{
-                color: "var(--cream-mid)",
-                fontFamily: "var(--font-display)",
-                lineHeight: 1.7,
-                marginBottom: "12px",
-                opacity: 0.7,
-              }}
-            >
-              {paragraph}
-            </p>
-          ))}
-        </motion.div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        {sentences.map((sentence, index) => (
+          <p
+            key={`${virtue.id}-${index}`}
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "17px",
+              fontWeight: 300,
+              color: "var(--cream-mid)",
+              opacity: 0.72,
+              lineHeight: 1.75,
+              margin: 0,
+            }}
+          >
+            {sentence}
+          </p>
+        ))}
       </div>
-    </main>
+
+      {isFocus ? (
+        <div
+          style={{
+            marginTop: "40px",
+            fontFamily: "var(--font-body)",
+            fontSize: "8px",
+            letterSpacing: "0.25em",
+            color: "var(--gold-soft)",
+            opacity: 0.6,
+            textTransform: "uppercase",
+          }}
+        >
+          · Vertu de la semaine ·
+        </div>
+      ) : null}
+    </div>
   );
 }
