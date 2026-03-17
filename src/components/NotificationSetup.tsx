@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { PushSubscriptionInput } from "@/types";
 
 type NotificationSetupProps = {
   vapidPublicKey: string | null;
 };
-
-type SetupState = "hidden" | "idle" | "success";
 
 function getApplicationServerKey(base64String: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -47,20 +45,58 @@ function getSubscriptionPayload(
 export default function NotificationSetup({
   vapidPublicKey,
 }: NotificationSetupProps) {
-  const [setupState, setSetupState] = useState<SetupState>("idle");
-  const timeoutRef = useRef<number | null>(null);
+  const [subscribed, setSubscribed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "denied") {
-      setSetupState("hidden");
+    if (!vapidPublicKey) {
+      setSubscribed(false);
+      return;
     }
 
-    return () => {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
+    let isActive = true;
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("/api/push/status", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load push status.");
+        }
+
+        const payload: unknown = await response.json();
+
+        if (
+          typeof payload === "object" &&
+          payload !== null &&
+          "data" in payload &&
+          typeof payload.data === "object" &&
+          payload.data !== null &&
+          "subscribed" in payload.data &&
+          typeof payload.data.subscribed === "boolean"
+        ) {
+          if (isActive) {
+            setSubscribed(payload.data.subscribed);
+          }
+
+          return;
+        }
+
+        throw new Error("Invalid push status payload.");
+      } catch {
+        if (isActive) {
+          setSubscribed(false);
+        }
       }
+    }
+
+    void loadStatus();
+
+    return () => {
+      isActive = false;
     };
-  }, []);
+  }, [vapidPublicKey]);
 
   async function handleEnableNotifications() {
     if (
@@ -69,14 +105,14 @@ export default function NotificationSetup({
       !("serviceWorker" in navigator) ||
       !("PushManager" in window)
     ) {
-      setSetupState("hidden");
+      setSubscribed(false);
       return;
     }
 
     const permission = await Notification.requestPermission();
 
     if (permission !== "granted") {
-      setSetupState("hidden");
+      setSubscribed(false);
       return;
     }
 
@@ -105,34 +141,15 @@ export default function NotificationSetup({
         throw new Error("Failed to save the push subscription.");
       }
 
-      setSetupState("success");
-      timeoutRef.current = window.setTimeout(() => {
-        setSetupState("hidden");
-      }, 2000);
+      setSubscribed(true);
     } catch (error: unknown) {
       console.error("Notification setup failed", error);
-      setSetupState("hidden");
+      setSubscribed(false);
     }
   }
 
-  if (!vapidPublicKey || setupState === "hidden") {
+  if (!vapidPublicKey || subscribed === null || subscribed) {
     return null;
-  }
-
-  if (setupState === "success") {
-    return (
-      <p
-        className="mt-6 text-[9px] font-light uppercase tracking-[0.22em]"
-        style={{
-          color: "var(--gold)",
-          fontFamily: "var(--font-body)",
-          opacity: 0.6,
-          transition: "opacity var(--transition-base)",
-        }}
-      >
-        Rappels activés ✓
-      </p>
-    );
   }
 
   return (
