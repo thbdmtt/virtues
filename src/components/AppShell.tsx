@@ -203,7 +203,10 @@ export default function AppShell({
 
   return (
     <>
-      <main className="fixed inset-0 flex flex-col">
+      <main
+        className="fixed inset-0 flex flex-col"
+        style={{ background: "var(--app-shell-bg)" }}
+      >
         <header
           className="absolute left-0 right-0 top-0 z-40 flex items-start justify-between"
           style={{

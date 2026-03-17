@@ -40,10 +40,13 @@ function CloseButton({ onClose }: CloseButtonProps) {
       style={{
         top: "max(var(--safe-top), 52px)",
         right: "calc(28px + var(--safe-right))",
-        color: "var(--cream-dim)",
+        minWidth: "44px",
+        minHeight: "44px",
+        padding: "8px",
+        color: "var(--cream-mid)",
         fontFamily: "var(--font-body)",
-        fontSize: "16px",
-        opacity: 0.5,
+        fontSize: "18px",
+        opacity: 0.6,
         transition: "opacity var(--transition-base)",
       }}
     >
@@ -132,67 +135,76 @@ export default function MenuPanel({
           boxShadow: "var(--shadow-panel), var(--shadow-inset)",
         }}
       >
-        <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-12">
-          {orderedVirtues.map((virtue, index) => {
-            const isFocus = virtue.id === focusId;
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto px-7"
+          style={{
+            paddingTop: "calc(max(var(--safe-top), 52px) + 36px)",
+            paddingBottom: "max(var(--safe-bottom), 32px)",
+          }}
+        >
+          <div className="mt-auto flex flex-col">
+            {orderedVirtues.map((virtue, index) => {
+              const isFocus = virtue.id === focusId;
 
-            return (
-              <button
-                key={virtue.id}
-                type="button"
-                onClick={() => handleOpenVirtue(virtue.id)}
-                className="tracker-focus-ring block w-full border-b py-[13px] text-left"
+              return (
+                <button
+                  key={virtue.id}
+                  type="button"
+                  onClick={() => handleOpenVirtue(virtue.id)}
+                  className="tracker-focus-ring block w-full border-b py-[14px] text-left"
+                  style={{
+                    borderBottomColor: "var(--cream-line-soft)",
+                    borderTopColor:
+                      index === 0 ? "var(--cream-line-soft)" : undefined,
+                    borderTopWidth: index === 0 ? "1px" : undefined,
+                    transition: "opacity var(--transition-base)",
+                  }}
+                >
+                  <div className="flex items-center gap-4">
+                    <span
+                      className="inline-block min-w-[24px] text-[9px] font-light uppercase tracking-[0.2em]"
+                      style={{
+                        color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
+                        fontFamily: "var(--font-body)",
+                        opacity: isFocus ? 0.8 : 0.45,
+                      }}
+                    >
+                      {formatVirtueNumber(virtue.id)}
+                    </span>
+                    <span
+                      className="text-[clamp(22px,5.5vw,28px)] font-light leading-none tracking-[-0.01em]"
+                      style={{
+                        color: isFocus ? "var(--gold)" : "var(--cream)",
+                        fontFamily: "var(--font-display)",
+                      }}
+                    >
+                      {virtue.nameFr}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={handleOpenCycle}
+              className="tracker-focus-ring mt-4 w-full border-t pt-4 text-left"
+              style={{
+                borderTopColor: "var(--cream-line-strong)",
+              }}
+            >
+              <span
+                className="text-[10px] font-light uppercase tracking-[0.3em]"
                 style={{
-                  borderBottomColor:
-                    "color-mix(in srgb, var(--cream) 5%, transparent)",
-                  borderTopColor:
-                    index === 0
-                      ? "color-mix(in srgb, var(--cream) 5%, transparent)"
-                      : undefined,
-                  borderTopWidth: index === 0 ? "1px" : undefined,
-                  transition: "opacity var(--transition-base)",
+                  color: "var(--cream-dim)",
+                  fontFamily: "var(--font-body)",
+                  opacity: 0.5,
                 }}
               >
-                <div className="flex items-center gap-4">
-                  <span
-                    className="min-w-[20px] text-[9px] font-light uppercase tracking-[0.2em]"
-                    style={{
-                      color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
-                      fontFamily: "var(--font-body)",
-                      opacity: isFocus ? 1 : 0.6,
-                    }}
-                  >
-                    {formatVirtueNumber(virtue.id)}
-                  </span>
-                  <span
-                    className="text-[clamp(20px,5.5vw,26px)] font-light leading-none tracking-[-0.01em]"
-                    style={{
-                      color: isFocus ? "var(--gold)" : "var(--cream)",
-                      fontFamily: "var(--font-display)",
-                    }}
-                  >
-                    {virtue.nameFr}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-
-          <button
-            type="button"
-            onClick={handleOpenCycle}
-            className="tracker-focus-ring mt-6 w-full border-t pt-5 text-left"
-            style={{
-              borderTopColor: "color-mix(in srgb, var(--cream) 8%, transparent)",
-            }}
-          >
-            <span
-              className="text-[11px] font-light uppercase tracking-[0.2em]"
-              style={{ color: "var(--cream-dim)", fontFamily: "var(--font-body)" }}
-            >
-              Cycle
-            </span>
-          </button>
+                Cycle
+              </span>
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.aside>
