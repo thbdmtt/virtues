@@ -59,6 +59,16 @@ export async function getVirtues(): Promise<Virtue[]> {
   return await db.select().from(virtues).orderBy(asc(virtues.id));
 }
 
+export async function getVirtueById(id: number): Promise<Virtue | null> {
+  const matchingVirtues = await db
+    .select()
+    .from(virtues)
+    .where(eq(virtues.id, id))
+    .limit(1);
+
+  return matchingVirtues[0] ?? null;
+}
+
 export async function getWeekEntries(weekStart: Date): Promise<Entry[]> {
   const weekRange = getWeekRange(weekStart);
 

@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import type { Virtue } from "@/types";
 
@@ -62,12 +62,10 @@ export default function MenuPanel({
 }: MenuPanelProps) {
   const shouldReduceMotion = useReducedMotion() ?? false;
   const router = useRouter();
-  const [expandedVirtueId, setExpandedVirtueId] = useState<number | null>(null);
   const orderedVirtues = getOrderedVirtues(virtues);
 
   useEffect(() => {
     if (!isOpen) {
-      setExpandedVirtueId(null);
       return;
     }
 
@@ -84,10 +82,9 @@ export default function MenuPanel({
     };
   }, [isOpen, onClose]);
 
-  function handleToggleVirtue(virtueId: number) {
-    setExpandedVirtueId((currentVirtueId) => {
-      return currentVirtueId === virtueId ? null : virtueId;
-    });
+  function handleOpenVirtue(virtueId: number) {
+    onClose();
+    router.push(`/virtue/${virtueId}`);
   }
 
   function handleOpenCycle() {
@@ -136,40 +133,24 @@ export default function MenuPanel({
           boxShadow: "var(--shadow-panel), var(--shadow-inset)",
         }}
       >
-        <div className="flex items-start justify-between px-7 pt-7">
-          <div>
-            <p
-              className="mt-12 text-[11px] font-light italic tracking-[0.1em]"
-              style={{
-                color: "var(--cream-dim)",
-                fontFamily: "var(--font-display)",
-              }}
-            >
-              Les treize vertus de Benjamin Franklin
-            </p>
-          </div>
+        <div className="flex justify-end px-7 pt-7">
           <CloseButton onClose={onClose} />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-8">
+        <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-12">
           {orderedVirtues.map((virtue) => {
-            const isExpanded = expandedVirtueId === virtue.id;
             const isFocus = virtue.id === focusId;
 
             return (
               <button
                 key={virtue.id}
                 type="button"
-                aria-expanded={isExpanded}
-                onClick={() => handleToggleVirtue(virtue.id)}
+                onClick={() => handleOpenVirtue(virtue.id)}
                 className="tracker-focus-ring block w-full border-b py-4 text-left"
                 style={{
                   borderBottomColor:
                     "color-mix(in srgb, var(--cream) 5%, transparent)",
-                  paddingLeft: isExpanded ? "6px" : "0px",
-                  transition: shouldReduceMotion
-                    ? "opacity var(--transition-base)"
-                    : "padding-left var(--t-fast) var(--ease)",
+                  transition: "opacity var(--transition-base)",
                 }}
               >
                 <div className="flex items-center justify-between gap-4">
@@ -218,30 +199,6 @@ export default function MenuPanel({
                 >
                   {virtue.description}
                 </p>
-
-                <div
-                  aria-hidden={!isExpanded}
-                  className="overflow-hidden pr-8"
-                  style={{
-                    maxHeight: isExpanded ? "80px" : "0px",
-                    opacity: isExpanded ? 0.75 : 0,
-                    transition: shouldReduceMotion
-                      ? "opacity var(--transition-base)"
-                      : "max-height var(--t-mid) var(--ease), opacity var(--t-mid) var(--ease)",
-                  }}
-                >
-                  <p
-                    className="pt-3 text-[12px] font-light italic"
-                    style={{
-                      color: "var(--cream-dim)",
-                      fontFamily: "var(--font-display)",
-                      opacity: 0.75,
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    « {virtue.maxim} »
-                  </p>
-                </div>
               </button>
             );
           })}

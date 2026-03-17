@@ -6,6 +6,7 @@ export const virtues = sqliteTable("virtues", {
   nameEn: text("name_en").notNull(),
   description: text("description").notNull(),
   maxim: text("maxim").notNull().default(""),
+  reflection: text("reflection").notNull().default(""),
   weekNumber: integer("week_number").notNull().unique(),
 });
 

@@ -88,6 +88,7 @@ function createVirtuePayload(virtue: Virtue): Virtue {
     nameEn: virtue.nameEn,
     description: virtue.description,
     maxim: virtue.maxim,
+    reflection: virtue.reflection,
     weekNumber: virtue.weekNumber,
   };
 }

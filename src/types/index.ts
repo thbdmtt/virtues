@@ -6,6 +6,7 @@ export type Virtue = {
   nameEn: string;
   description: string;
   maxim: string;
+  reflection: string;
   weekNumber: number;
 };
 
