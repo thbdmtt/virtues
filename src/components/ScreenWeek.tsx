@@ -190,8 +190,10 @@ export default function ScreenWeek({
                 style={{
                   background: isFocus
                     ? "color-mix(in srgb, var(--gold) 5%, transparent)"
-                    : "transparent",
-                  boxShadow: isFocus ? "inset 0 0 0 1px var(--gold-line)" : "none",
+                    : "color-mix(in srgb, var(--surface) 32%, transparent)",
+                  boxShadow: isFocus
+                    ? "inset 0 0 0 1px var(--gold-line)"
+                    : "inset 0 0 0 1px color-mix(in srgb, var(--cream-line-soft) 70%, transparent)",
                   transition:
                     "background-color var(--transition-base), box-shadow var(--transition-base)",
                 }}
@@ -202,13 +204,13 @@ export default function ScreenWeek({
                   style={{
                     transform: "translateY(-50%)",
                     zIndex: 0,
-                    color: isFocus ? "var(--gold)" : "var(--cream)",
-                    opacity: isFocus ? 0.13 : 0.055,
+                    color: isFocus ? "var(--gold)" : "var(--cream-mid)",
+                    opacity: isFocus ? 0.18 : 0.09,
                     fontFamily: "var(--font-display)",
-                    fontSize: "15px",
+                    fontSize: "17px",
                     fontStyle: "italic",
                     fontWeight: 300,
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.04em",
                     lineHeight: 1,
                   }}
                 >

@@ -1,0 +1,8 @@
+{
+  "/api/auth/route": "/api/auth",
+  "/api/week/route": "/api/week",
+  "/api/virtue/[id]/route": "/api/virtue/[id]",
+  "/login/page": "/login",
+  "/page": "/",
+  "/virtue/[id]/page": "/virtue/[id]"
+}

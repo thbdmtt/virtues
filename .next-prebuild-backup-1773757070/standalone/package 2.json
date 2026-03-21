@@ -1,0 +1,38 @@
+{
+  "name": "franklin-virtues",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "db:migrate:prod": "npx drizzle-kit push",
+    "db:seed:prod": "npx tsx src/lib/db/seed.ts",
+    "generate:pwa": "tsx src/scripts/generate-icons.ts",
+    "start": "node .next/standalone/server.js",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "bcryptjs": "^3.0.3",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.36.0",
+    "iron-session": "^8.0.4",
+    "lucide-react": "^0.577.0",
+    "next": "^15.5.12",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^24.6.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.9",
+    "tailwindcss": "^4.2.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

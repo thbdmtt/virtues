@@ -1,0 +1,16 @@
+{
+  "/api/history/route": "/api/history",
+  "/api/auth/logout/route": "/api/auth/logout",
+  "/_not-found/page": "/_not-found",
+  "/api/push/subscribe/route": "/api/push/subscribe",
+  "/api/push/send/route": "/api/push/send",
+  "/api/stats/route": "/api/stats",
+  "/api/auth/route": "/api/auth",
+  "/api/mark/route": "/api/mark",
+  "/api/week/route": "/api/week",
+  "/cycle/page": "/cycle",
+  "/history/page": "/history",
+  "/login/page": "/login",
+  "/page": "/",
+  "/api/health/route": "/api/health"
+}
