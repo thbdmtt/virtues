@@ -38,9 +38,11 @@ function getDayLabel(day: Date): string {
 }
 
 function getCellLabel(virtueName: string, dayLabel: string, isMarked: boolean): string {
-  return isMarked
-    ? `${virtueName}, ${dayLabel}, faute marquée`
-    : `${virtueName}, ${dayLabel}, aucune faute marquée`;
+  return isMarked ? `${virtueName}, ${dayLabel}, faute marquée` : `${virtueName}, ${dayLabel}, aucune faute marquée`;
+}
+
+function getVirtueLabel(nameFr: string): string {
+  return nameFr.length > 7 ? `${nameFr.substring(0, 6)}.` : nameFr;
 }
 
 export default function ScreenWeek({
@@ -150,16 +152,13 @@ export default function ScreenWeek({
         </div>
       </header>
 
-      <div
-        aria-hidden="true"
-        className="mx-[10px] h-px shrink-0"
-        style={{ background: "linear-gradient(to right, var(--gold-line), transparent)" }}
-      />
+      <div aria-hidden="true" className="mx-[10px] h-px shrink-0" style={{ background: "linear-gradient(to right, var(--gold-line), transparent)" }} />
 
       <div
-        className="grid shrink-0 grid-cols-7 gap-[3px] px-[10px] pb-3 pt-4"
-        style={{ alignItems: "center" }}
+        className="grid shrink-0 gap-[3px] px-[10px] pb-3 pt-4"
+        style={{ alignItems: "center", gridTemplateColumns: "52px repeat(7, 1fr)" }}
       >
+        <div />
         {weekDays.map((day) => {
           const isToday = isSameDay(day, today);
 
@@ -186,7 +185,7 @@ export default function ScreenWeek({
             return (
               <div
                 key={virtue.id}
-                className="relative rounded-[18px] px-[10px] py-[8px]"
+                className="rounded-[18px] px-[10px] py-[8px]"
                 style={{
                   background: isFocus
                     ? "color-mix(in srgb, var(--gold) 5%, transparent)"
@@ -198,33 +197,27 @@ export default function ScreenWeek({
                     "background-color var(--transition-base), box-shadow var(--transition-base)",
                 }}
               >
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-0 right-0 top-1/2 overflow-hidden whitespace-nowrap"
-                  style={{
-                    transform: "translateY(-50%)",
-                    zIndex: 0,
-                    color: isFocus
-                      ? "var(--gold)"
-                      : "color-mix(in srgb, var(--cream) 60%, var(--cream-mid))",
-                    opacity: isFocus ? 0.22 : 0.12,
-                    fontFamily: "var(--font-display)",
-                    fontSize: "13px",
-                    fontStyle: "italic",
-                    fontWeight: 300,
-                    letterSpacing: "0.06em",
-                    lineHeight: 1,
-                    textAlign: "left",
-                    paddingLeft: "4px",
-                  }}
-                >
-                  {virtue.nameFr}
-                </div>
-
-                <div
-                  className="relative z-[1] grid grid-cols-7 gap-[3px]"
-                  style={{ alignItems: "center" }}
-                >
+                <div className="grid gap-[3px]" style={{ alignItems: "center", gridTemplateColumns: "52px repeat(7, 1fr)" }}>
+                  <div style={{ display: "flex", alignItems: "center", paddingRight: "6px" }}>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "7px",
+                        fontWeight: 300,
+                        letterSpacing: "0.08em",
+                        color: isFocus ? "var(--gold-soft)" : "var(--cream-dim)",
+                        opacity: isFocus ? 0.9 : 0.5,
+                        textAlign: "right",
+                        width: "100%",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {getVirtueLabel(virtue.nameFr)}
+                    </span>
+                  </div>
                   {weekDays.map((day, dayIdx) => {
                     const isToday = isSameDay(day, today);
                     const isFuture = isAfter(startOfDay(day), today);
