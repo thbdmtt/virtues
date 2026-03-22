@@ -200,18 +200,22 @@ export default function ScreenWeek({
               >
                 <div
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-0 right-0 top-1/2 overflow-hidden whitespace-nowrap text-center"
+                  className="pointer-events-none absolute left-0 right-0 top-1/2 overflow-hidden whitespace-nowrap"
                   style={{
                     transform: "translateY(-50%)",
                     zIndex: 0,
-                    color: isFocus ? "var(--gold)" : "var(--cream-mid)",
-                    opacity: isFocus ? 0.18 : 0.09,
+                    color: isFocus
+                      ? "var(--gold)"
+                      : "color-mix(in srgb, var(--cream) 60%, var(--cream-mid))",
+                    opacity: isFocus ? 0.22 : 0.12,
                     fontFamily: "var(--font-display)",
-                    fontSize: "17px",
+                    fontSize: "13px",
                     fontStyle: "italic",
                     fontWeight: 300,
-                    letterSpacing: "0.04em",
+                    letterSpacing: "0.06em",
                     lineHeight: 1,
+                    textAlign: "left",
+                    paddingLeft: "4px",
                   }}
                 >
                   {virtue.nameFr}
