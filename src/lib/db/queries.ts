@@ -1,7 +1,6 @@
 import {
   addDays,
   format,
-  getISOWeek,
   startOfISOWeek,
   subWeeks,
 } from "date-fns";
@@ -15,11 +14,11 @@ import type {
   PushSubscriptionRecord,
   Virtue,
 } from "@/types";
+import { getCycleWeekNumber } from "../utils/cycle";
 
 import { db } from "./client";
 import { entries, pushSubscriptions, virtues } from "./schema";
 
-const CYCLE_LENGTH = 13;
 const HISTORY_LENGTH = 13;
 const DATE_KEY_FORMAT = "yyyy-MM-dd";
 
@@ -40,10 +39,8 @@ function getWeekRange(weekStart: Date): { start: string; end: string } {
   };
 }
 
-function getFocusVirtueId(weekStart: Date): number {
-  const isoWeekNumber = getISOWeek(normalizeWeekStart(weekStart));
-
-  return ((isoWeekNumber - 1) % CYCLE_LENGTH) + 1;
+function getFocusWeekNumber(weekStart: Date): number {
+  return getCycleWeekNumber(normalizeWeekStart(weekStart));
 }
 
 function getHistoryRange(): { start: string; end: string } {
@@ -111,16 +108,18 @@ export async function toggleMark(date: string, virtueId: number): Promise<void> 
 }
 
 export async function getVirtueFocusForWeek(weekStart: Date): Promise<Virtue> {
-  const virtueId = getFocusVirtueId(weekStart);
+  const cycleWeekNumber = getFocusWeekNumber(weekStart);
   const virtuesForWeek = await db
     .select()
     .from(virtues)
-    .where(eq(virtues.id, virtueId))
+    .where(eq(virtues.weekNumber, cycleWeekNumber))
     .limit(1);
   const virtue = virtuesForWeek[0];
 
   if (!virtue) {
-    throw new Error(`Virtue ${virtueId} not found for the requested week.`);
+    throw new Error(
+      `Virtue for cycle week ${cycleWeekNumber} not found for the requested week.`,
+    );
   }
 
   return virtue;

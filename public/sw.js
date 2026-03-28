@@ -1,4 +1,4 @@
-const CACHE_VERSION = "virtues-v1";
+const CACHE_VERSION = "virtues-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -117,30 +117,28 @@ async function networkFirst(request) {
   }
 }
 
-async function staleWhileRevalidate(request) {
+async function networkFirstPage(request) {
   const cache = await caches.open(PAGE_CACHE);
-  const cachedResponse = await cache.match(request);
-  const fallbackKey = new URL(request.url).pathname;
-  const fallbackResponse = await caches.match(fallbackKey);
-  const networkPromise = fetch(request)
-    .then((response) => remember(PAGE_CACHE, request, response))
-    .catch(() => null);
 
-  if (cachedResponse) {
-    return cachedResponse;
+  try {
+    const networkResponse = await fetch(request);
+
+    return remember(PAGE_CACHE, request, networkResponse);
+  } catch {
+    const cachedResponse = await cache.match(request);
+    const fallbackKey = new URL(request.url).pathname;
+    const fallbackResponse = await caches.match(fallbackKey);
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    if (fallbackResponse) {
+      return fallbackResponse;
+    }
+
+    throw new Error("No cached page response available.");
   }
-
-  if (fallbackResponse) {
-    return fallbackResponse;
-  }
-
-  const networkResponse = await networkPromise;
-
-  if (networkResponse) {
-    return networkResponse;
-  }
-
-  throw new Error("No cached page response available.");
 }
 
 self.addEventListener("install", (event) => {
@@ -180,7 +178,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (isTrackedPage(url, request)) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkFirstPage(request));
     return;
   }
 

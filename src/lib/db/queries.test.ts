@@ -16,6 +16,8 @@ type QueriesModule = typeof import("./queries");
 
 const originalDatabaseUrl = process.env.TURSO_DATABASE_URL;
 const originalAuthToken = process.env.TURSO_AUTH_TOKEN;
+const originalCycleOriginWeekStart =
+  process.env.FRANKLIN_CYCLE_ORIGIN_WEEK_START;
 const tempDirectory = mkdtempSync(join(tmpdir(), "franklin-virtues-"));
 const testDatabasePath = join(tempDirectory, "queries.test.db");
 const testDatabaseUrl = `file:${testDatabasePath}`;
@@ -54,6 +56,7 @@ async function createTestDatabase() {
           name_en text NOT NULL,
           description text NOT NULL,
           maxim text NOT NULL DEFAULT '',
+          reflection text NOT NULL DEFAULT '',
           week_number integer NOT NULL UNIQUE
         )
       `,
@@ -78,10 +81,18 @@ async function createTestDatabase() {
   );
 
   for (let index = 1; index <= 13; index += 1) {
-    await getTestClient().execute({
+      await getTestClient().execute({
       sql: `
-        INSERT INTO virtues (id, name_fr, name_en, description, maxim, week_number)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO virtues (
+          id,
+          name_fr,
+          name_en,
+          description,
+          maxim,
+          reflection,
+          week_number
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         index,
@@ -89,6 +100,7 @@ async function createTestDatabase() {
         `Virtue ${index}`,
         `Description ${index}`,
         `Maxim ${index}`,
+        `Reflection ${index}`,
         index,
       ],
     });
@@ -99,6 +111,7 @@ beforeAll(async () => {
   await createTestDatabase();
   process.env.TURSO_DATABASE_URL = testDatabaseUrl;
   process.env.TURSO_AUTH_TOKEN = "test-token";
+  process.env.FRANKLIN_CYCLE_ORIGIN_WEEK_START = "2026-03-16";
   vi.resetModules();
 
   queriesModule = await import("./queries");
@@ -123,6 +136,12 @@ afterAll(() => {
     process.env.TURSO_AUTH_TOKEN = originalAuthToken;
   } else {
     delete process.env.TURSO_AUTH_TOKEN;
+  }
+
+  if (originalCycleOriginWeekStart) {
+    process.env.FRANKLIN_CYCLE_ORIGIN_WEEK_START = originalCycleOriginWeekStart;
+  } else {
+    delete process.env.FRANKLIN_CYCLE_ORIGIN_WEEK_START;
   }
 
   rmSync(tempDirectory, { recursive: true, force: true });
@@ -154,5 +173,17 @@ describe("toggleMark", () => {
     await expect(
       getQueriesModule().getWeekEntries(targetWeekStart),
     ).resolves.toEqual([{ date: targetDate, virtueId, hasMark: true }]);
+  });
+});
+
+describe("getVirtueFocusForWeek", () => {
+  it("follows the configured cycle origin instead of the ISO calendar week", async () => {
+    await expect(
+      getQueriesModule().getVirtueFocusForWeek(new Date(2026, 2, 23)),
+    ).resolves.toMatchObject({
+      id: 2,
+      weekNumber: 2,
+      nameFr: "Virtue 2",
+    });
   });
 });

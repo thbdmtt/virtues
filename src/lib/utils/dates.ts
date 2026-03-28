@@ -59,3 +59,11 @@ export function getPreviousWeek(weekStart: Date): Date {
 export function getNextWeek(weekStart: Date): Date {
   return addWeeks(normalizeWeekStart(weekStart), 1);
 }
+
+export function getMillisecondsUntilNextDay(date: Date = new Date()): number {
+  const nextDay = new Date(date);
+
+  nextDay.setHours(24, 0, 0, 0);
+
+  return Math.max(nextDay.getTime() - date.getTime(), 0);
+}

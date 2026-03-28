@@ -1452,3 +1452,36 @@ RAPPELS NON-NÉGOCIABLES
 - Maximum 300 lignes par fichier
 - Annoncer les fichiers avant de les créer ou modifier
 - Ne modifier que le nécessaire — zéro refactoring non demandé
+
+---
+
+NOTE 2026-03-28 — Correction durable du basculement hebdomadaire
+──────────────────────────────────────────────────────────────────
+
+Réalisé :
+- Ajout de `src/lib/utils/cycle.ts` pour calculer la semaine du cycle
+  depuis une origine explicite au lieu de `getISOWeek()`.
+- Le focus hebdomadaire utilise désormais `virtues.week_number`
+  et non plus `virtues.id`, ce qui aligne le calcul avec la règle métier.
+- Ajout de `FRANKLIN_CYCLE_ORIGIN_WEEK_START` dans `.env.example`
+  avec une valeur par défaut de secours : `2026-03-16`.
+- Ajout d'un rafraîchissement client automatique au changement de jour
+  pour que l'app bascule sans reload manuel quand la date change.
+- Passage du service worker en stratégie `network-first` pour `/`
+  et `/history`, avec invalidation des anciens caches via `virtues-v2`.
+- Ajout de tests unitaires et d'intégration couvrant :
+  le calcul du cycle, le passage à la semaine 2 et le délai jusqu'au
+  prochain changement de jour.
+
+Fichiers modifiés/créés :
+- src/lib/utils/cycle.ts
+- src/lib/utils/cycle.test.ts
+- src/lib/utils/dates.ts
+- src/lib/utils/dates.test.ts
+- src/lib/db/queries.ts
+- src/lib/db/queries.test.ts
+- src/components/useCalendarRefresh.ts
+- src/components/AppShell.tsx
+- public/sw.js
+- .env.example
+- TASKS.md

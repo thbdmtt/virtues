@@ -12,6 +12,7 @@ import {
 import MenuPanel from "@/components/MenuPanel";
 import ScreenToday from "@/components/ScreenToday";
 import ScreenWeek from "@/components/ScreenWeek";
+import useCalendarRefresh from "@/components/useCalendarRefresh";
 import useMarkMutation from "@/components/useMarkMutation";
 import useWeekScreenData from "@/components/useWeekScreenData";
 import MenuButton from "@/components/ui/MenuButton";
@@ -51,6 +52,8 @@ export default function AppShell({
   initialWeekData,
   vapidPublicKey,
 }: AppShellProps) {
+  useCalendarRefresh();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [weekOpen, setWeekOpen] = useState(false);
   const [currentMarks, setCurrentMarks] = useState(

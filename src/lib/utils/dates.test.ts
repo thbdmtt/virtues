@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   formatDateKey,
   getCurrentWeekStart,
+  getMillisecondsUntilNextDay,
   getNextWeek,
   getPreviousWeek,
   getWeekDays,
@@ -53,5 +54,11 @@ describe("dates utilities", () => {
     expect(formatDateKey(getNextWeek(new Date(2026, 2, 10)))).toBe(
       "2026-03-16",
     );
+  });
+
+  it("getMillisecondsUntilNextDay returns the delay until local midnight", () => {
+    expect(
+      getMillisecondsUntilNextDay(new Date(2026, 2, 13, 23, 59, 30, 0)),
+    ).toBe(30_000);
   });
 });
